@@ -468,24 +468,40 @@
   })();
 
   /* ========================================================================
-     8 · Barra de navegação
+     8 · Rolagem · barra fixa e parallax da abertura
+     Um único listener em rAF cuida dos dois, para não disputar frame.
      ======================================================================== */
-  (function topbar() {
+  (function scrollFX() {
     const bar = $("#topbar");
     const toggle = $("#menuToggle");
-    if (!bar) return;
+    const foto = $("#heroPhoto");
+    const hero = $("#topo");
+
+    // A foto desce a 30% da velocidade da página: o fundo fica para trás.
+    const FATOR = 0.3;
+    const parallaxAtivo = foto && hero && !prefersReducedMotion();
 
     let agendado = false;
     window.addEventListener("scroll", () => {
       if (agendado) return;
       agendado = true;
       requestAnimationFrame(() => {
-        bar.classList.toggle("is-stuck", window.scrollY > 32);
+        const y = window.scrollY;
+
+        if (bar) bar.classList.toggle("is-stuck", y > 32);
+
+        if (parallaxAtivo) {
+          // Só enquanto a abertura está à vista — depois não há o que mover.
+          const limite = hero.offsetHeight;
+          const desloc = Math.min(y, limite) * FATOR;
+          foto.style.transform = `translate3d(0, ${desloc.toFixed(1)}px, 0)`;
+        }
+
         agendado = false;
       });
     }, { passive: true });
 
-    if (!toggle) return;
+    if (!bar || !toggle) return;
 
     const rotulo = $(".sr", toggle);
 

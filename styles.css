@@ -221,9 +221,41 @@ strong, b { color: var(--giz); font-weight: 600; }
    6 · ABERTURA
    ========================================================================== */
 .hero {
+  position: relative; isolation: isolate; overflow: hidden;
   padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(56px, 8vw, 96px);
 }
-.hero > * { max-width: var(--max); margin-inline: auto; }
+
+/* ---- atmosfera em parallax ----
+   A foto é mais alta que a seção e sobra para cima, porque ela desce
+   enquanto a página sobe. A sobra evita que a borda apareça no topo. */
+.hero-scene { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+
+.hero-photo {
+  position: absolute; left: 0; top: -35%;
+  width: 100%; height: 135%;
+  object-fit: cover; object-position: 50% 42%;
+  will-change: transform;
+}
+
+/* Escurece a esquerda, onde fica o texto, e deixa a luz dos refletores
+   respirar na direita. Sem isso o contraste do título cai. */
+.hero-scrim {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(14, 17, 20, .96) 0%,
+      rgba(14, 17, 20, .88) 34%,
+      rgba(14, 17, 20, .62) 68%,
+      rgba(14, 17, 20, .48) 100%),
+    linear-gradient(180deg,
+      rgba(14, 17, 20, .88) 0%,
+      rgba(14, 17, 20, .30) 26%,
+      rgba(14, 17, 20, .46) 68%,
+      var(--asfalto-0) 100%);
+}
+
+.hero-content { position: relative; z-index: 1; }
+.hero-content > * { max-width: var(--max); margin-inline: auto; }
 
 .hero-kicker {
   font-family: var(--f-mono); font-size: var(--t-tag);
@@ -852,4 +884,7 @@ strong, b { color: var(--giz); font-weight: 600; }
   }
 
   .runner { animation: none; transform: translateX(var(--parado)); }
+
+  /* a foto fica parada; a atmosfera permanece, o movimento não */
+  .hero-photo { transform: none !important; }
 }
