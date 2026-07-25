@@ -1,290 +1,509 @@
 /* ==========================================================================
-   IMSA HUB · interações
+   IMSA HUB · interface
+
+   Tudo que é lista na página (faixa de tráfego, classes, grid, calendário,
+   tabela de pontos) é montado a partir de data.js. Nenhum conteúdo é
+   duplicado entre HTML e JS.
    ========================================================================== */
+(function () {
+  "use strict";
 
-/* ---------- Render dos cards de equipe ---------- */
-function teamCard(e, i) {
-  const color = BRAND[e.brand] || "#888";
-  const imgHtml = e.img
-    ? `<div class="team-photo"><img loading="lazy" src="${commons(e.img)}" alt="#${e.num} ${e.team} · ${e.car}"></div>`
-    : `<div class="team-photo team-photo--empty"><span>#${e.num}</span><small>${e.brand}</small></div>`;
-  return `
-    <article class="team" style="--brand:${color}" data-idx="${i}" tabindex="0" role="button" aria-label="Ver ${e.team}">
-      ${imgHtml}
-      <div class="team-info">
-        <div class="team-top">
-          <span class="team-num">#${e.num}</span>
-          <span class="team-brand">${e.brand}</span>
-        </div>
-        <h3 class="team-car">${e.car}</h3>
-        <p class="team-name">${e.team}</p>
-        <p class="team-drivers">${e.drivers}</p>
-      </div>
-    </article>`;
-}
+  /* ========================================================================
+     Utilitários
+     ======================================================================== */
+  const $  = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
-function renderGrid(id, list, classLabel) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = list.map((e, i) => teamCard(e, i)).join("");
-  el.querySelectorAll(".team").forEach(card => {
-    const e = list[+card.dataset.idx];
-    const open = () => openCar(e, classLabel);
-    card.addEventListener("click", open);
-    card.addEventListener("keydown", ev => {
-      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); open(); }
-    });
-  });
-}
-
-renderGrid("gtpGrid", GTP, "GTP · Grand Touring Prototype");
-renderGrid("proGrid", GTDPRO, "GTD PRO · GT Daytona Pro");
-renderGrid("gtdGrid", GTD, "GTD · GT Daytona");
-
-/* ---------- Imagem única dos LMP2 ---------- */
-(function lmp2Image() {
-  const fig = document.getElementById("lmp2Figure");
-  if (!fig || typeof LMP2_IMG === "undefined") return;
-  const img = new Image();
-  img.loading = "lazy";
-  img.src = commons(LMP2_IMG);
-  img.alt = "LMP2 · Oreca 07";
-  fig.insertBefore(img, fig.firstChild);
-})();
-
-/* ---------- Tabs GTD Pro / GTD ---------- */
-document.querySelectorAll(".tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    const target = btn.dataset.tab;
-    document.querySelectorAll("[data-tabpanel]").forEach(p => {
-      p.classList.toggle("hidden", p.dataset.tabpanel !== target);
-    });
-  });
-});
-
-/* ---------- Calendário: grid de pistas + modal ---------- */
-(function renderTracks() {
-  const el = document.getElementById("timeline");
-  if (!el) return;
-  const now = new Date();
-
-  el.innerHTML = SCHEDULE.map((r, i) => {
-    const done = new Date(r.end + "T23:59:59") < now;
-    const mapHtml = r.map
-      ? `<img loading="lazy" src="${commons(r.map)}" alt="Traçado ${r.track}">`
-      : "";
-    return `
-      <button class="track-card ${done ? "done" : ""} ${r.enduro ? "enduro" : ""}" data-idx="${i}">
-        <div class="tc-top">
-          <span class="tc-round">R${r.round}</span>
-          ${r.enduro ? '<span class="tc-badge">Endurance ★</span>' : ""}
-        </div>
-        <div class="tc-map">${mapHtml}</div>
-        <p class="tc-name">${r.name}</p>
-        <p class="tc-track">${r.track}</p>
-        <div class="tc-meta">
-          <span>${r.loc}</span>
-          <span class="tc-date">${r.date} · ${r.len}</span>
-        </div>
-      </button>`;
-  }).join("");
-
-  el.querySelectorAll(".track-card").forEach(card => {
-    card.addEventListener("click", () => openTrack(SCHEDULE[+card.dataset.idx]));
-  });
-})();
-
-/* ---------- Modais (pista e carro) ---------- */
-function openModal(el) {
-  if (!el) return;
-  el.classList.add("open");
-  el.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-}
-function closeModals() {
-  document.querySelectorAll(".modal.open").forEach(m => {
-    m.classList.remove("open");
-    m.setAttribute("aria-hidden", "true");
-  });
-  document.body.style.overflow = "";
-}
-
-// Modal de pista
-const trackModal = document.getElementById("trackModal");
-function openTrack(r) {
-  if (!trackModal) return;
-  const img = document.getElementById("mImg");
-  img.src = r.map ? commons(r.map) : "";
-  img.alt = "Traçado " + r.track;
-  document.getElementById("mRound").textContent =
-    "Rodada " + r.round + (r.enduro ? " · Michelin Endurance Cup" : "");
-  document.getElementById("mName").textContent = r.name;
-  document.getElementById("mLoc").textContent = r.track + " · " + r.loc;
-  document.getElementById("mFacts").innerHTML = `
-    <li><span>Data</span><b>${r.date}</b></li>
-    <li><span>Duração</span><b>${r.len}</b></li>
-    <li><span>Extensão</span><b>${r.km || "—"}</b></li>
-    <li><span>Curvas</span><b>${r.turns != null ? r.turns : "—"}</b></li>
-    <li><span>Tipo de pista</span><b>${r.type || "—"}</b></li>
-    <li><span>Local</span><b>${r.loc}</b></li>
-    <li><span>Formato</span><b>${r.enduro ? "Endurance (longa duração)" : "Sprint"}</b></li>`;
-  openModal(trackModal);
-}
-
-// Modal de carro
-const carModal = document.getElementById("carModal");
-function openCar(e, classLabel) {
-  if (!carModal) return;
-  const img = document.getElementById("cImg");
-  const wrap = img.parentElement;
-  if (e.img) {
-    img.src = commons(e.img);
-    img.alt = e.team + " · " + e.car;
-    img.style.display = "";
-    wrap.classList.remove("modal-map--empty");
-    wrap.dataset.brand = "";
-  } else {
-    img.removeAttribute("src");
-    img.style.display = "none";
-    wrap.classList.add("modal-map--empty");
-    wrap.dataset.brand = "#" + e.num;
-  }
-  wrap.style.setProperty("--brand", BRAND[e.brand] || "#888");
-  const s = (typeof CAR_SPECS !== "undefined" && CAR_SPECS[e.car]) || {};
-  document.getElementById("cClass").textContent = classLabel || "";
-  document.getElementById("cName").textContent = "#" + e.num + " · " + e.team;
-  document.getElementById("cCar").textContent = e.car;
-  document.getElementById("cFacts").innerHTML = `
-    <li><span>Montadora</span><b>${e.brand}</b></li>
-    <li><span>Motor</span><b>${s.motor || "—"}</b></li>
-    <li><span>Potência</span><b>${s.potencia || "—"}</b></li>
-    <li><span>Tração</span><b>${s.tracao || "—"}</b></li>
-    <li><span>Peso mín.</span><b>${s.peso || "—"}</b></li>
-    <li><span>Regulamento</span><b>${s.reg || "—"}</b></li>
-    <li><span>Pilotos</span><b>${e.drivers}</b></li>`;
-  openModal(carModal);
-}
-
-document.querySelectorAll(".modal [data-close]").forEach(b =>
-  b.addEventListener("click", closeModals)
-);
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeModals(); });
-
-/* ---------- Pontuação: simulador + tabela ---------- */
-(function points() {
-  const base = { 1: 350, 2: 320, 3: 300, 4: 280, 5: 260 };
-  const racePts = p => (p <= 5 ? base[p] : Math.max(260 - (p - 5) * 10, 0));
-  const qualiPts = p => Math.round(racePts(p) / 10);
-  const ord = p => p + "º";
-
-  // Tabela (top 12)
-  const body = document.getElementById("ptableBody");
-  if (body) {
-    let html = "";
-    for (let p = 1; p <= 12; p++) {
-      html += `<div class="ptr" data-pos="${p}">
-        <span class="ptr-pos">${ord(p)}</span>
-        <span class="ptr-race">${racePts(p)}</span>
-        <span class="ptr-quali">${qualiPts(p)}</span>
-      </div>`;
-    }
-    body.innerHTML = html;
+  // Escapa texto antes de injetar em template. Os dados são nossos, mas o
+  // grid tem nomes com aspas e acentos — melhor não depender disso.
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[ch]));
   }
 
-  // Simulador
-  const range = document.getElementById("posRange");
-  const elPos = document.getElementById("simPos");
-  const elRace = document.getElementById("simRace");
-  const elQuali = document.getElementById("simQuali");
-  const elTotal = document.getElementById("simTotal");
-  const elNote = document.getElementById("simNote");
+  const ord = (n) => n + "º";
 
-  function update(p) {
-    const r = racePts(p), q = qualiPts(p);
-    if (elPos) elPos.textContent = ord(p);
-    if (elRace) elRace.textContent = r;
-    if (elQuali) elQuali.textContent = q;
-    if (elTotal) elTotal.textContent = r + q;
-    if (elNote) {
-      elNote.textContent = p === 1
-        ? "Vitória + pole: o máximo possível num fim de semana de Sprint."
-        : `Terminando em ${ord(p)} na classe, ainda leva ${r} pontos — no IMSA, ninguém sai zerado.`;
-    }
-    if (body) {
-      body.querySelectorAll(".ptr").forEach(row =>
-        row.classList.toggle("active", +row.dataset.pos === p)
-      );
-    }
-  }
+  // Cada classe referencia sua própria variável de cor do CSS.
+  const classColor = (id) => `var(--${id})`;
 
-  if (range) {
-    range.addEventListener("input", () => update(+range.value));
-    body && body.querySelectorAll(".ptr").forEach(row =>
-      row.addEventListener("click", () => { range.value = row.dataset.pos; update(+row.dataset.pos); })
-    );
-    update(+range.value);
-  }
-})();
+  const byId = (id) => CLASSES.find((c) => c.id === id);
 
-/* ---------- Countdown para a próxima etapa ---------- */
-(function countdown() {
-  const now = new Date();
-  const next = SCHEDULE.find(r => new Date(r.end + "T23:59:59") >= now);
-  const raceEl = document.getElementById("cdRace");
+  const prefersReducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!next) {
-    if (raceEl) raceEl.textContent = "Temporada encerrada";
-    return;
-  }
-  if (raceEl) raceEl.textContent = next.name;
-  const target = new Date(next.end + "T14:00:00").getTime();
-
-  const set = (id, v) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = String(v).padStart(2, "0");
+  /* ------------------------------------------------------------------------
+     Silhuetas de carro, vistas de lado, viradas para a direita.
+     São duas porque a diferença real do grid é essa: protótipo puro de
+     corrida (GTP e LMP2) contra carro de GT derivado de rua (GTD Pro e GTD).
+     A cor continua identificando a classe específica.
+     ------------------------------------------------------------------------ */
+  const SILHUETAS = {
+    // baixo, longo, cabine quase rente ao capô, asa alta e fina
+    prototipo: `
+      <path d="M2 6.2h13.4v2.3H2z"/>
+      <path d="M7.6 7.4h2.2v4.2H7.6z"/>
+      <path d="M61.5 18.5 57 12.4 45 10.4 36 8 26 7.5 17 8.8 10 10.4 4 12.4 3 18.5Z"/>
+      <circle cx="16.6" cy="18" r="4.6"/>
+      <circle cx="49" cy="18" r="4.6"/>`,
+    // cabine alta e recuada, montantes inclinados, conjunto mais encorpado
+    gt: `
+      <path d="M3 6.6h13v2.3H3z"/>
+      <path d="M8.4 7.8h2.2v3.9H8.4z"/>
+      <path d="M61 18.5 59.4 13 52 11.5 45.5 5.6 41 4 27 3.6 20.6 5.6 15 11.5 5 13 4 18.5Z"/>
+      <circle cx="17" cy="18" r="4.8"/>
+      <circle cx="48" cy="18" r="4.8"/>`,
   };
 
-  function tick() {
-    const diff = target - Date.now();
-    if (diff <= 0) {
-      set("cdD", 0); set("cdH", 0); set("cdM", 0); set("cdS", 0);
+  const carroSVG = (tipo) =>
+    `<svg class="runner-svg" viewBox="0 0 64 24" aria-hidden="true" focusable="false">${
+      SILHUETAS[tipo] || SILHUETAS.gt
+    }</svg>`;
+
+  /* ========================================================================
+     1 · Faixa de tráfego
+     Cada classe circula no seu tempo de volta real. O GTP alcança o GTD
+     na tela porque alcança mesmo na pista.
+     ======================================================================== */
+  (function trafficBand() {
+    const lane = $("#band");
+    const legend = $("#bandLegend");
+    if (!lane || !legend) return;
+
+    const SEGUNDOS_POR_VOLTA = 0.1;   // 1s de pista ≈ 0,1s de animação
+    const LINHAS = ["26%", "42%", "60%", "76%"];      // linhas de corrida
+    const PARADOS = ["10%", "34%", "58%", "78%"];     // posições sem animação
+    const maisLento = Math.max(...CLASSES.map((c) => c.lap));
+
+    lane.innerHTML = CLASSES.map((c, i) => {
+      const dur = (c.lap * SEGUNDOS_POR_VOLTA).toFixed(2);
+      const trail = Math.round(40 + (maisLento - c.lap) * 4);   // rastro maior = mais rápido
+      return `
+        <div class="runner" style="--c:${classColor(c.id)};--y:${LINHAS[i]};--dur:${dur}s;--trail:${trail}px;--parado:${PARADOS[i]}">
+          <span class="runner-car">${carroSVG(c.type)}</span>
+        </div>`;
+    }).join("");
+
+    legend.innerHTML = CLASSES.map((c) => `
+      <div>
+        <i style="--c:${classColor(c.id)}"></i>
+        <dt>${esc(c.plate)}</dt>
+        <dd>${esc(c.lapLabel)}</dd>
+      </div>`).join("");
+  })();
+
+  /* ========================================================================
+     2 · Classes
+     Lista ordenada: da mais rápida para a mais lenta. A ordem é informação.
+     ======================================================================== */
+  (function classList() {
+    const list = $("#classList");
+    if (!list) return;
+
+    list.innerHTML = CLASSES.map((c) => `
+      <li class="rank" data-class="${esc(c.id)}" style="--c:${classColor(c.id)}">
+        <p class="rank-plate">${esc(c.plate)}</p>
+        <div>
+          <h3 class="rank-name">${esc(c.name)}</h3>
+          <p class="rank-text">${esc(c.summary)}</p>
+        </div>
+        <dl class="rank-data">
+          <div><dt>Placa</dt><dd>${esc(c.placa)}</dd></div>
+          <div><dt>Volta ref.</dt><dd>${esc(c.lapLabel)}</dd></div>
+          <div><dt>Tripulação</dt><dd>${esc(c.crew)}</dd></div>
+        </dl>
+      </li>`).join("");
+  })();
+
+  /* ========================================================================
+     3 · Grid + filtro por classe
+     ======================================================================== */
+  (function grid() {
+    const wrap = $("#cars");
+    const filters = $("#filters");
+    const panel = $("#lmp2Panel");
+    const count = $("#gridCount");
+    if (!wrap || !filters) return;
+
+    if (count) {
+      count.textContent = `${ENTRIES.length} carros listados · LMP2 em ficha técnica`;
+    }
+
+    /* ---- cards ---- */
+    wrap.innerHTML = ENTRIES.map((e, i) => `
+      <button class="car" data-class="${esc(e.cls)}" data-idx="${i}"
+              style="--c:${classColor(e.cls)}" type="button">
+        <span class="car-shot" style="--marca:${esc(BRAND[e.brand] || "#3B4653")}">
+          <img loading="lazy" decoding="async" src="${esc(commons(e.img))}"
+               alt="${esc(`#${e.num} ${e.team}, ${e.car}`)}">
+        </span>
+        <span class="car-body">
+          <span class="car-top">
+            <span class="car-num">#${esc(e.num)}</span>
+            <span class="car-brand">${esc(e.brand)}</span>
+          </span>
+          <span class="car-model">${esc(e.car)}</span>
+          <span class="car-team">${esc(e.team)}</span>
+          <span class="car-drivers">${esc(e.drivers)}</span>
+        </span>
+      </button>`).join("");
+
+    // Se a foto do Commons não carregar, o espaço vira a placa da montadora.
+    $$(".car-shot img", wrap).forEach((img) => {
+      img.addEventListener("error", () => {
+        const shot = img.parentElement;
+        shot.classList.add("car-shot--fallback");
+        shot.innerHTML = `<span>#${esc(ENTRIES[+shot.closest(".car").dataset.idx].num)}</span>`;
+      }, { once: true });
+    });
+
+    $$(".car", wrap).forEach((card) => {
+      card.addEventListener("click", () => openCarSheet(ENTRIES[+card.dataset.idx]));
+    });
+
+    /* ---- ficha LMP2 ---- */
+    const shot = $("#lmp2Shot");
+    if (shot) {
+      const img = new Image();
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.src = commons(LMP2.img);
+      img.alt = "LMP2 · Oreca 07 no IMSA";
+      shot.insertBefore(img, shot.firstChild);
+      $("#lmp2Caption").textContent = LMP2.caption;
+    }
+    const specs = $("#lmp2Specs");
+    if (specs) {
+      specs.innerHTML = LMP2.specs.map((s) => `
+        <div><dt>${esc(s.value)}</dt><dd>${esc(s.label)}</dd></div>`).join("");
+    }
+
+    /* ---- filtros ---- */
+    const opcoes = [{ id: "todos", plate: "Todos" }].concat(CLASSES);
+
+    filters.innerHTML = opcoes.map((o) => `
+      <button class="filter" type="button" data-filter="${esc(o.id)}"
+              aria-pressed="${o.id === "todos"}"
+              ${o.id === "todos" ? "" : `style="--c:${classColor(o.id)}"`}>
+        ${o.id === "todos" ? "" : "<i aria-hidden=\"true\"></i>"}${esc(o.plate)}
+      </button>`).join("");
+
+    function aplicar(alvo) {
+      $$(".filter", filters).forEach((b) => {
+        b.setAttribute("aria-pressed", String(b.dataset.filter === alvo));
+      });
+
+      $$(".car", wrap).forEach((card) => {
+        card.hidden = alvo !== "todos" && card.dataset.class !== alvo;
+      });
+
+      // O grid some quando só o LMP2 está selecionado; a ficha some no oposto.
+      wrap.hidden = alvo === "lmp2";
+      if (panel) panel.hidden = alvo !== "todos" && alvo !== "lmp2";
+    }
+
+    filters.addEventListener("click", (ev) => {
+      const btn = ev.target.closest(".filter");
+      if (btn) aplicar(btn.dataset.filter);
+    });
+
+    aplicar("todos");
+  })();
+
+  /* ========================================================================
+     4 · Calendário
+     ======================================================================== */
+  (function calendar() {
+    const list = $("#rounds");
+    if (!list) return;
+    const agora = new Date();
+
+    list.innerHTML = SCHEDULE.map((r, i) => {
+      const passou = new Date(r.end + "T23:59:59") < agora;
+      return `
+        <li>
+          <button class="round ${passou ? "is-done" : ""} ${r.enduro ? "is-enduro" : ""}"
+                  type="button" data-idx="${i}">
+            <span class="round-top">
+              <span class="round-num">Rodada ${r.round}</span>
+              <span class="round-len">${esc(r.short)}</span>
+            </span>
+            <span class="round-map">
+              <img loading="lazy" decoding="async" src="${esc(commons(r.map))}"
+                   alt="Traçado do circuito ${esc(r.track)}">
+            </span>
+            <span class="round-name">${esc(r.name)}</span>
+            <span class="round-track">${esc(r.track)}</span>
+            <span class="round-meta"><span>${esc(r.date)}</span><span>${esc(r.loc)}</span></span>
+          </button>
+        </li>`;
+    }).join("");
+
+    $$(".round", list).forEach((btn) => {
+      btn.addEventListener("click", () => openTrackSheet(SCHEDULE[+btn.dataset.idx]));
+    });
+  })();
+
+  /* ========================================================================
+     5 · Fichas (diálogos)
+     Foco preso enquanto aberta, devolvido ao elemento de origem ao fechar.
+     ======================================================================== */
+  const FOCAVEIS = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  let aberta = null;
+  let focoAnterior = null;
+
+  function abrir(sheet) {
+    if (!sheet) return;
+    focoAnterior = document.activeElement;
+    sheet.hidden = false;
+    aberta = sheet;
+    document.body.style.overflow = "hidden";
+    const primeiro = $(FOCAVEIS, sheet);
+    if (primeiro) primeiro.focus();
+  }
+
+  function fechar() {
+    if (!aberta) return;
+    aberta.hidden = true;
+    aberta = null;
+    document.body.style.overflow = "";
+    if (focoAnterior && typeof focoAnterior.focus === "function") focoAnterior.focus();
+    focoAnterior = null;
+  }
+
+  document.addEventListener("click", (ev) => {
+    if (ev.target.closest("[data-close]")) fechar();
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    if (!aberta) return;
+
+    if (ev.key === "Escape") {
+      fechar();
       return;
     }
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    set("cdD", d); set("cdH", h); set("cdM", m); set("cdS", s);
-  }
-  tick();
-  setInterval(tick, 1000);
-})();
 
-/* ---------- Nav: fundo ao rolar + menu mobile ---------- */
-const nav = document.getElementById("nav");
-window.addEventListener("scroll", () => {
-  nav.classList.toggle("scrolled", window.scrollY > 40);
-});
+    if (ev.key !== "Tab") return;
 
-const toggle = document.getElementById("navToggle");
-if (toggle) {
-  toggle.addEventListener("click", () => nav.classList.toggle("open"));
-  document.querySelectorAll(".nav-links a").forEach(a =>
-    a.addEventListener("click", () => nav.classList.remove("open"))
-  );
-}
+    // Prende o foco dentro da ficha aberta.
+    const alvos = $$(FOCAVEIS, aberta).filter((el) => el.offsetParent !== null);
+    if (!alvos.length) return;
+    const primeiro = alvos[0];
+    const ultimo = alvos[alvos.length - 1];
 
-/* ---------- Reveal on scroll ---------- */
-const io = new IntersectionObserver((entries) => {
-  entries.forEach(en => {
-    if (en.isIntersecting) {
-      en.target.classList.add("in");
-      io.unobserve(en.target);
+    if (ev.shiftKey && document.activeElement === primeiro) {
+      ev.preventDefault();
+      ultimo.focus();
+    } else if (!ev.shiftKey && document.activeElement === ultimo) {
+      ev.preventDefault();
+      primeiro.focus();
     }
   });
-}, { threshold: 0.12 });
 
-document.querySelectorAll(".section-head, .cclass, .team, .track-card, .score-card, .dyn, .spec")
-  .forEach(el => { el.classList.add("reveal"); io.observe(el); });
+  function fatos(pares) {
+    return pares.map(([rotulo, valor]) =>
+      `<div><dt>${esc(rotulo)}</dt><dd>${esc(valor || "—")}</dd></div>`).join("");
+  }
+
+  function openTrackSheet(r) {
+    const sheet = $("#trackSheet");
+    if (!sheet) return;
+
+    const img = $("#tsImg");
+    img.src = commons(r.map);
+    img.alt = "Traçado do circuito " + r.track;
+
+    $("#tsRound").textContent = `Rodada ${r.round}${r.enduro ? " · Michelin Endurance Cup" : ""}`;
+    $("#tsName").textContent = r.name;
+    $("#tsLoc").textContent = `${r.track} · ${r.loc}`;
+    $("#tsFacts").innerHTML = fatos([
+      ["Data", r.date],
+      ["Duração", r.len],
+      ["Extensão", r.km],
+      ["Curvas", r.turns],
+      ["Tipo de pista", r.type],
+      ["Formato", r.enduro ? "Endurance" : "Sprint"],
+    ]);
+
+    abrir(sheet);
+  }
+
+  function openCarSheet(e) {
+    const sheet = $("#carSheet");
+    if (!sheet) return;
+
+    const img = $("#csImg");
+    img.src = commons(e.img);
+    img.alt = `${e.team} · ${e.car}`;
+
+    const spec = CAR_SPECS[e.car] || {};
+    const cls = byId(e.cls);
+
+    $("#csClass").textContent = cls ? `${cls.plate} · ${cls.name}` : "";
+    $("#csName").textContent = `#${e.num} · ${e.team}`;
+    $("#csCar").textContent = e.car;
+    $("#csFacts").innerHTML = fatos([
+      ["Montadora", e.brand],
+      ["Motor", spec.motor],
+      ["Potência", spec.potencia],
+      ["Tração", spec.tracao],
+      ["Peso mín.", spec.peso],
+      ["Regulamento", spec.reg],
+      ["Pilotos", e.drivers],
+    ]);
+
+    abrir(sheet);
+  }
+
+  /* ========================================================================
+     6 · Pontos · simulador e tabela
+     ======================================================================== */
+  (function points() {
+    const body = $("#tableBody");
+    const range = $("#posRange");
+    const pos = $("#simPos");
+    const race = $("#simRace");
+    const quali = $("#simQuali");
+    const total = $("#simTotal");
+    const nota = $("#simNote");
+    if (!range) return;
+
+    if (body) {
+      let html = "";
+      for (let p = 1; p <= 12; p++) {
+        html += `
+          <button class="row" type="button" data-pos="${p}">
+            <span class="row-pos">${ord(p)}</span>
+            <span class="row-race">${racePoints(p)}</span>
+            <span class="row-quali">${qualiPoints(p)}</span>
+          </button>`;
+      }
+      body.innerHTML = html;
+
+      $$(".row", body).forEach((row) => {
+        row.addEventListener("click", () => {
+          range.value = row.dataset.pos;
+          atualizar(+row.dataset.pos);
+        });
+      });
+    }
+
+    function atualizar(p) {
+      const r = racePoints(p);
+      const q = qualiPoints(p);
+
+      pos.textContent = ord(p);
+      race.textContent = r;
+      quali.textContent = q;
+      total.textContent = r + q;
+
+      nota.textContent = p === 1
+        ? "Vitória com a pole: o máximo possível em um fim de semana de sprint."
+        : `Terminando em ${ord(p)} na classe, o carro ainda leva ${r} pontos. No IMSA, ninguém sai zerado.`;
+
+      if (body) {
+        $$(".row", body).forEach((row) => {
+          row.classList.toggle("is-active", +row.dataset.pos === p);
+        });
+      }
+    }
+
+    range.addEventListener("input", () => atualizar(+range.value));
+    atualizar(+range.value);
+  })();
+
+  /* ========================================================================
+     7 · Contagem para a próxima etapa
+     ======================================================================== */
+  (function countdown() {
+    const nome = $("#nextName");
+    const rodada = $("#nextRound");
+    const onde = $("#nextWhere");
+    const card = $("#nextCard");
+    if (!nome) return;
+
+    const agora = new Date();
+    const proxima = SCHEDULE.find((r) => new Date(r.end + "T23:59:59") >= agora);
+
+    if (!proxima) {
+      nome.textContent = "Temporada encerrada";
+      if (card) card.hidden = true;
+      return;
+    }
+
+    nome.textContent = proxima.name;
+    if (rodada) rodada.textContent = `Rodada ${proxima.round} de ${SCHEDULE.length}`;
+    if (onde) onde.textContent = `${proxima.date} · ${proxima.track}, ${proxima.loc} · ${proxima.len}`;
+
+    // O card inteiro abre a ficha da etapa — é a ação óbvia a partir daqui.
+    if (card) card.addEventListener("click", () => openTrackSheet(proxima));
+
+    const alvo = new Date(proxima.end + "T14:00:00").getTime();
+    const campos = {
+      cdD: $("#cdD"), cdH: $("#cdH"), cdM: $("#cdM"), cdS: $("#cdS"),
+    };
+    const set = (id, v) => {
+      if (campos[id]) campos[id].textContent = String(v).padStart(2, "0");
+    };
+
+    let timer = null;
+
+    function tick() {
+      const resta = alvo - Date.now();
+
+      if (resta <= 0) {
+        set("cdD", 0); set("cdH", 0); set("cdM", 0); set("cdS", 0);
+        clearInterval(timer);          // nada mais a contar
+        return;
+      }
+
+      set("cdD", Math.floor(resta / 86400000));
+      set("cdH", Math.floor((resta % 86400000) / 3600000));
+      set("cdM", Math.floor((resta % 3600000) / 60000));
+      set("cdS", Math.floor((resta % 60000) / 1000));
+    }
+
+    tick();
+    timer = setInterval(tick, 1000);
+  })();
+
+  /* ========================================================================
+     8 · Barra de navegação
+     ======================================================================== */
+  (function topbar() {
+    const bar = $("#topbar");
+    const toggle = $("#menuToggle");
+    if (!bar) return;
+
+    let agendado = false;
+    window.addEventListener("scroll", () => {
+      if (agendado) return;
+      agendado = true;
+      requestAnimationFrame(() => {
+        bar.classList.toggle("is-stuck", window.scrollY > 32);
+        agendado = false;
+      });
+    }, { passive: true });
+
+    if (!toggle) return;
+
+    const rotulo = $(".sr", toggle);
+
+    toggle.addEventListener("click", () => {
+      const aberto = bar.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", String(aberto));
+      if (rotulo) rotulo.textContent = aberto ? "Fechar menu" : "Abrir menu";
+    });
+
+    $$(".menu a").forEach((a) => {
+      a.addEventListener("click", () => {
+        bar.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+        if (rotulo) rotulo.textContent = "Abrir menu";
+      });
+    });
+  })();
+
+  // Marca no documento que o JS assumiu, caso o CSS precise reagir.
+  document.documentElement.dataset.js = prefersReducedMotion() ? "reduced" : "on";
+})();

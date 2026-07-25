@@ -2,315 +2,324 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IMSA HUB · WeatherTech SportsCar Championship</title>
-<meta name="description" content="Fan hub não-oficial do IMSA WeatherTech SportsCar Championship: classes, equipes, calendário 2026, pontuação e as dinâmicas de BoP e Safety Car.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMSA HUB · Endurance multiclasse</title>
+<meta name="description" content="Fan hub não-oficial do IMSA WeatherTech SportsCar Championship: as quatro classes, o grid 2026, o calendário de 11 etapas, o sistema de pontos e as regras de BoP e Safety Car.">
+<meta name="theme-color" content="#0E1114">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="IMSA HUB · Endurance multiclasse">
+<meta property="og:description" content="Quatro classes dividem a mesma pista, em ritmos diferentes. O guia da temporada 2026 do WeatherTech SportsCar Championship.">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E1114'/%3E%3Crect x='6' y='5' width='20' height='4' fill='%23F1F3F5'/%3E%3Crect x='6' y='12' width='20' height='4' fill='%234C9AFF'/%3E%3Crect x='6' y='19' width='20' height='4' fill='%23FF4F3E'/%3E%3Crect x='6' y='26' width='20' height='4' fill='%232FD463'/%3E%3C/svg%3E">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- NAV -->
-<header class="nav" id="nav">
-  <a href="#top" class="brand">
-    <span class="brand-mark">IMSA</span>
-    <span class="brand-sub">HUB</span>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+
+<!-- ══ NAVEGAÇÃO ══ -->
+<header class="topbar" id="topbar">
+  <a href="#topo" class="mark">
+    <span class="mark-name">IMSA</span><span class="mark-sub">HUB</span>
   </a>
-  <nav class="nav-links">
+
+  <nav class="menu" id="menu" aria-label="Seções">
     <a href="#classes">Classes</a>
-    <a href="#gtp">GTP</a>
-    <a href="#gt3">GT3</a>
+    <a href="#grid">Grid</a>
     <a href="#calendario">Calendário</a>
-    <a href="#pontuacao">Pontuação</a>
-    <a href="#dinamicas">Dinâmicas</a>
+    <a href="#pontos">Pontos</a>
+    <a href="#regras">Regras</a>
   </nav>
-  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+
+  <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="menu">
+    <span class="menu-toggle-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="sr">Abrir menu</span>
+  </button>
 </header>
 
-<!-- HERO -->
-<section class="hero" id="top">
-  <div class="hero-grid"></div>
-  <div class="hero-inner">
-    <p class="eyebrow">WeatherTech SportsCar Championship</p>
-    <h1>O Endurance mais<br><span>disputado das Américas</span></h1>
-    <p class="lead">
-      Quatro classes. Tecnologias radicalmente diferentes dividindo a mesma pista.
-      Corridas de 100 minutos a 24 horas. Bem-vindo ao IMSA.
-    </p>
+<main id="conteudo">
 
-    <div class="countdown" id="countdown">
-      <p class="cd-label">Próxima etapa · <span id="cdRace">—</span></p>
-      <div class="cd-clock">
-        <div class="cd-box"><span id="cdD">--</span><small>dias</small></div>
-        <div class="cd-box"><span id="cdH">--</span><small>horas</small></div>
-        <div class="cd-box"><span id="cdM">--</span><small>min</small></div>
-        <div class="cd-box"><span id="cdS">--</span><small>seg</small></div>
-      </div>
-    </div>
+  <!-- ══ ABERTURA · A FAIXA DE TRÁFEGO ══ -->
+  <section class="hero" id="topo">
+    <p class="hero-kicker">IMSA WeatherTech SportsCar Championship</p>
 
-    <a href="#classes" class="scroll-hint">↓ Role para conhecer o grid</a>
-  </div>
-</section>
+    <img class="hero-logo"
+         src="https://commons.wikimedia.org/wiki/Special:FilePath/International%20Motor%20Sports%20Association%20logo%20%282014-present%29.svg"
+         alt="IMSA · International Motor Sports Association"
+         width="750" height="154" fetchpriority="high">
 
-<!-- CLASSES OVERVIEW -->
-<section class="section" id="classes">
-  <div class="section-head">
-    <span class="tag">01 · O GRID</span>
-    <h2>Quatro classes, uma pista</h2>
-    <p>Cada categoria é identificada por uma cor específica na placa de número e nos espelhos. Elas não competem entre si pelos pontos — cada classe tem sua própria disputa.</p>
-  </div>
+    <h1 class="hero-title">Multiclasse</h1>
 
-  <div class="class-cards">
-    <a href="#gtp" class="cclass" data-plate="gtp">
-      <span class="plate">GTP</span>
-      <h3>Grand Touring Prototype</h3>
-      <p>A categoria rainha. Protótipos híbridos LMDh/LMH, ~670 cv, sistema híbrido de 50 kW.</p>
-      <span class="chip">Placa Preta</span>
-    </a>
-    <a href="#lmp2" class="cclass" data-plate="lmp2">
-      <span class="plate">LMP2</span>
-      <h3>Le Mans Prototype 2</h3>
-      <p>Protótipos padronizados (chassi Oreca 07, motor Gibson V8). Sem híbrido. Reduto Pro-Am.</p>
-      <span class="chip">Placa Azul</span>
-    </a>
-    <a href="#gt3" class="cclass" data-plate="gtdpro">
-      <span class="plate">GTD PRO</span>
-      <h3>GT Daytona Pro</h3>
-      <p>Carros GT3 de fábrica com tripulações 100% profissionais (Ouro/Platina).</p>
-      <span class="chip">Placa Vermelha</span>
-    </a>
-    <a href="#gt3" class="cclass" data-plate="gtd">
-      <span class="plate">GTD</span>
-      <h3>GT Daytona</h3>
-      <p>Os mesmos GT3, mas com pilotos Prata/Bronze obrigatórios. Pro-Am de clientes.</p>
-      <span class="chip">Placa Verde</span>
-    </a>
-  </div>
-</section>
+    <figure class="band">
+      <div class="band-lane" id="band" aria-hidden="true"></div>
 
-<!-- GTP -->
-<section class="section alt" id="gtp">
-  <div class="section-head">
-    <span class="tag plate-gtp">02 · GTP</span>
-    <h2>Grand Touring Prototype</h2>
-    <p>Onde as montadoras travam sua guerra tecnológica. Motores customizados + híbrido padrão de 50 kW, sob os mesmos regulamentos de Le Mans (LMDh e LMH). 11 carros de 5 fabricantes em 2026.</p>
-  </div>
-
-  <div class="team-grid" id="gtpGrid"></div>
-</section>
-
-<!-- LMP2 -->
-<section class="section" id="lmp2">
-  <div class="section-head">
-    <span class="tag plate-lmp2">03 · LMP2</span>
-    <h2>Le Mans Prototype 2</h2>
-    <p>Igualdade mecânica total: todos correm com o chassi Oreca 07 e o motor Gibson V8 aspirado. A diferença está no piloto e na estratégia. 12 carros full-season em 2026.</p>
-  </div>
-  <div class="lmp2-wrap">
-    <figure class="lmp2-figure" id="lmp2Figure">
-      <figcaption>Oreca 07 — o chassi único que todos os LMP2 utilizam (aqui a equipe PR1/Mathiasen no IMSA)</figcaption>
+      <figcaption class="band-caption">
+        <dl class="band-legend" id="bandLegend"></dl>
+        <p class="band-note">
+          Volta de referência em Daytona, aproximada. Enquanto o GTP completa uma volta,
+          o GTD ainda está cerca de <strong>12 segundos atrás</strong> — e essa diferença
+          se repete a cada volta, durante horas.
+        </p>
+      </figcaption>
     </figure>
-    <div class="spec-row">
-      <div class="spec"><strong>Oreca 07</strong><small>Chassi único homologado</small></div>
-      <div class="spec"><strong>Gibson GK428</strong><small>V8 4.2L aspirado</small></div>
-      <div class="spec"><strong>Sem híbrido</strong><small>Puro motor a combustão</small></div>
-      <div class="spec"><strong>Pro-Am</strong><small>Equipes independentes</small></div>
+
+    <button class="next" id="nextCard" type="button">
+      <span class="next-info">
+        <span class="next-label">Próxima etapa<span class="next-round" id="nextRound"></span></span>
+        <span class="next-name" id="nextName">Carregando…</span>
+        <span class="next-where" id="nextWhere"></span>
+        <span class="next-cta">Ver o traçado e a ficha da etapa <span aria-hidden="true">→</span></span>
+      </span>
+
+      <span class="next-count">
+        <span class="next-label">Faltam</span>
+        <span class="clock" role="timer" aria-live="off">
+          <span class="clock-cell"><span class="clock-num" id="cdD">--</span><span class="clock-unit">dias</span></span>
+          <span class="clock-cell"><span class="clock-num" id="cdH">--</span><span class="clock-unit">horas</span></span>
+          <span class="clock-cell"><span class="clock-num" id="cdM">--</span><span class="clock-unit">min</span></span>
+          <span class="clock-cell"><span class="clock-num" id="cdS">--</span><span class="clock-unit">seg</span></span>
+        </span>
+      </span>
+    </button>
+  </section>
+
+  <!-- ══ CLASSES ══ -->
+  <section class="block" id="classes">
+    <header class="head">
+      <p class="head-label">Da mais rápida para a mais lenta</p>
+      <h2 class="head-title">As quatro classes</h2>
+      <p class="head-text">
+        Cada categoria é identificada pela cor da placa de número e das luzes no carro.
+        Elas não disputam pontos entre si: cada classe tem seu próprio campeonato,
+        seu próprio pódio e sua própria briga por título.
+      </p>
+    </header>
+
+    <ol class="ranks" id="classList"></ol>
+  </section>
+
+  <!-- ══ GRID ══ -->
+  <section class="block block--raised" id="grid">
+    <header class="head">
+      <p class="head-label" id="gridCount"></p>
+      <h2 class="head-title">O grid 2026</h2>
+      <p class="head-text">
+        Sem filtro, o grid aparece misturado — que é exatamente como ele chega na pista.
+        Escolha uma classe para separar as categorias.
+      </p>
+    </header>
+
+    <div class="filters" role="group" aria-label="Filtrar o grid por classe" id="filters"></div>
+
+    <div class="cars" id="cars"></div>
+
+    <!-- LMP2 não tem lista de inscritos por equipe: é um pacote técnico único -->
+    <div class="lmp2" id="lmp2Panel">
+      <figure class="lmp2-shot" id="lmp2Shot">
+        <figcaption id="lmp2Caption"></figcaption>
+      </figure>
+      <dl class="lmp2-specs" id="lmp2Specs"></dl>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- GT3 (PRO + GTD) -->
-<section class="section alt" id="gt3">
-  <div class="section-head">
-    <span class="tag plate-gtdpro">04 · GT3</span>
-    <h2>GTD Pro &amp; GTD</h2>
-    <p>Os mesmos carros GT3 baseados em modelos de rua. A única diferença é a tripulação: <strong>GTD Pro</strong> corre com pilotos profissionais (Ouro/Platina); <strong>GTD</strong> exige pilotos Prata/Bronze pagantes ou amadores de alto nível.</p>
-  </div>
+  <!-- ══ CALENDÁRIO ══ -->
+  <section class="block" id="calendario">
+    <header class="head">
+      <p class="head-label">Janeiro a outubro · 11 etapas</p>
+      <h2 class="head-title">A temporada</h2>
+      <p class="head-text">
+        O que muda de uma etapa para outra não é só o traçado: é a duração.
+        As provas longas formam a <strong>Michelin Endurance Cup</strong>, um campeonato
+        paralelo dentro da temporada. Abra uma etapa para ver o traçado e a ficha.
+      </p>
+    </header>
 
-  
-  <div class="tabs">
-    <button class="tab active" data-tab="pro">GTD PRO</button>
-    <button class="tab" data-tab="gtd">GTD</button>
-  </div>
+    <ol class="rounds" id="rounds"></ol>
+  </section>
 
-  <div class="team-grid" id="proGrid" data-tabpanel="pro"></div>
-  <div class="team-grid hidden" id="gtdGrid" data-tabpanel="gtd"></div>
-</section>
+  <!-- ══ PONTOS ══ -->
+  <section class="block block--raised" id="pontos">
+    <header class="head">
+      <p class="head-label">Ninguém sai zerado</p>
+      <h2 class="head-title">Todos pontuam</h2>
+      <p class="head-text">
+        Na Fórmula 1 só os dez primeiros somam. No IMSA, <strong>todo carro que larga
+        marca pontos</strong> dentro da sua classe. É o que mantém a disputa de título
+        viva até a última etapa. Arraste o controle e veja quanto vale cada posição.
+      </p>
+    </header>
 
-<!-- CALENDAR -->
-<section class="section" id="calendario">
-  <div class="section-head">
-    <span class="tag">05 · TEMPORADA 2026</span>
-    <h2>Calendário · 11 etapas</h2>
-    <p>Circuitos mistos, ruas e ovais adaptados. As provas destacadas (★) compõem a <strong>Michelin Endurance Cup</strong> — as corridas de longa duração. Clique em uma etapa para ver o traçado.</p>
-  </div>
-  <div class="track-grid" id="timeline"></div>
-</section>
+    <div class="points">
+      <div class="sim">
+        <p class="sim-label">Simulador · posição final na classe</p>
 
-<!-- MODAL DE PISTA -->
-<div class="modal" id="trackModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="mName">
-    <button class="modal-close" data-close aria-label="Fechar">&times;</button>
-    <div class="modal-map"><img id="mImg" alt=""></div>
-    <div class="modal-info">
-      <span class="modal-round" id="mRound"></span>
-      <h3 id="mName"></h3>
-      <p class="modal-loc" id="mLoc"></p>
-      <ul class="modal-facts" id="mFacts"></ul>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DE CARRO -->
-<div class="modal" id="carModal" aria-hidden="true">
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cName">
-    <button class="modal-close" data-close aria-label="Fechar">&times;</button>
-    <div class="modal-map modal-map--photo"><img id="cImg" alt=""></div>
-    <div class="modal-info">
-      <span class="modal-round" id="cClass"></span>
-      <h3 id="cName"></h3>
-      <p class="modal-loc" id="cCar"></p>
-      <ul class="modal-facts" id="cFacts"></ul>
-    </div>
-  </div>
-</div>
-
-<!-- SCORING -->
-<section class="section alt" id="pontuacao">
-  <div class="section-head">
-    <span class="tag">06 · PONTOS</span>
-    <h2>Todos pontuam</h2>
-    <p>Diferente da F1, onde só os 10 primeiros somam, o IMSA distribui pontos para <strong>todos os carros que largam</strong>, dentro de cada classe. Isso mantém a briga por título viva até a última etapa. Arraste abaixo e veja quanto vale cada posição.</p>
-  </div>
-
-  <div class="points-top">
-    <!-- Simulador -->
-    <div class="sim-card">
-      <p class="sim-label">Simulador · posição final na classe</p>
-      <div class="sim-display">
-        <div class="sim-pos"><span id="simPos">1º</span><small>na sua classe</small></div>
-        <div class="sim-nums">
-          <div class="sim-num race"><b id="simRace">350</b><small>pts corrida</small></div>
-          <div class="sim-num quali"><b id="simQuali">35</b><small>pts pole/quali</small></div>
-          <div class="sim-num total"><b id="simTotal">385</b><small>total no fim de semana</small></div>
+        <div class="sim-readout">
+          <p class="sim-pos"><span id="simPos">1º</span><small>na sua classe</small></p>
+          <dl class="sim-figures">
+            <div class="sim-figure"><dt>Corrida</dt><dd id="simRace">350</dd></div>
+            <div class="sim-figure"><dt>Classificação</dt><dd id="simQuali">35</dd></div>
+            <div class="sim-figure sim-figure--total"><dt>Fim de semana</dt><dd id="simTotal">385</dd></div>
+          </dl>
         </div>
+
+        <label class="sr" for="posRange">Posição final na classe</label>
+        <input type="range" id="posRange" min="1" max="20" value="1" step="1">
+        <p class="sim-scale" aria-hidden="true"><span>1º</span><span>10º</span><span>20º</span></p>
+        <p class="sim-note" id="simNote"></p>
       </div>
-      <input type="range" id="posRange" min="1" max="20" value="1" aria-label="Posição final">
-      <div class="sim-scale"><span>1º</span><span>10º</span><span>20º</span></div>
-      <p class="sim-note" id="simNote"></p>
+
+      <div class="table">
+        <p class="table-head"><span>Pos.</span><span>Corrida</span><span>Quali</span></p>
+        <div class="table-body" id="tableBody"></div>
+        <p class="table-note">
+          Do 1º ao 5º a queda é maior — 30 e depois 20 pontos por posição.
+          A partir do 5º, cai de <strong>10 em 10</strong>.
+        </p>
+      </div>
     </div>
 
-    <!-- Tabela dinâmica -->
-    <div class="ptable-card">
-      <div class="ptable-head"><span>Pos.</span><span>Corrida</span><span>Quali</span></div>
-      <div id="ptableBody" class="ptable-body"></div>
-      <p class="ptable-note">Do 1º ao 5º a queda é maior (−30, depois −20). A partir do 5º, cai <strong>10 em 10</strong> por posição.</p>
+    <div class="notes">
+      <article class="note">
+        <h3>Por que tudo vezes 10</h3>
+        <p>Em 2021 o IMSA multiplicou a tabela inteira por dez. Assim a classificação pode valer exatamente 10% da corrida <strong>sem casas decimais</strong>.</p>
+      </article>
+      <article class="note">
+        <h3>Classificação sem esconder o jogo</h3>
+        <p>Como o sábado vale 10% dos pontos, ninguém ganha nada segurando o ritmo. As equipes andam no limite já na classificação.</p>
+      </article>
+      <article class="note">
+        <h3>Michelin Endurance Cup</h3>
+        <p>Nas provas longas há uma pontuação extra e paralela, distribuída em <strong>marcos no meio da corrida</strong>, não só na bandeirada.</p>
+      </article>
+      <article class="note">
+        <h3>Tempo mínimo de pilotagem</h3>
+        <p>Para pontuar, o piloto precisa cumprir o tempo mínimo ao volante. Andou menos do que o exigido? <strong>Zero pontos</strong> — mesmo que o carro vença.</p>
+      </article>
     </div>
-  </div>
+  </section>
 
-  <div class="points-info">
-    <div class="pinfo">
-      <h4>Por que multiplicar por 10?</h4>
-      <p>Em 2021 o IMSA multiplicou toda a tabela por 10. Assim é possível somar os pontos da classificação (exatos 10% da corrida) <strong>sem usar casas decimais</strong>.</p>
-    </div>
-    <div class="pinfo">
-      <h4>Classificação sem sandbagging</h4>
-      <p>Como o treino de sábado vale 10% dos pontos, ninguém tem incentivo para <strong>esconder o ritmo</strong>. As equipes andam no limite já na classificação.</p>
-    </div>
-    <div class="pinfo">
-      <h4>Michelin Endurance Cup</h4>
-      <p>Nas provas longas (Daytona, Sebring, Watkins Glen, Road America e Petit Le Mans) há uma <strong>pontuação extra e paralela</strong>, distribuída em marcos intermediários da corrida além da bandeirada final.</p>
-    </div>
-    <div class="pinfo rule">
-      <h4>Regra de elegibilidade</h4>
-      <p>Para pontuar, o piloto precisa cumprir o <strong>tempo mínimo de pilotagem</strong> da prova. Andou menos que o exigido? Zero pontos — mesmo que o carro vença a corrida.</p>
-    </div>
-  </div>
-</section>
-
-<!-- DYNAMICS -->
-<section class="section" id="dinamicas">
-  <div class="section-head">
-    <span class="tag">07 · REGULAMENTO</span>
-    <h2>Duas dinâmicas que definem o IMSA</h2>
-    <p>Dois mecanismos são a alma do campeonato: um mantém o grid equilibrado; o outro mantém a corrida indecisa até a bandeirada.</p>
-  </div>
-
-  <div class="dyn-grid">
-    <article class="dyn">
-      <div class="dyn-icon">BoP</div>
-      <h3>Balance of Performance</h3>
-      <p>
-        GTP e GT3 reúnem motores e projetos radicalmente diferentes — um <strong>V8 turbo</strong>, um <strong>V6 biturbo</strong>,
-        um <strong>V12 aspirado</strong>, um boxer 6 cilindros. Sozinhos, jamais andariam no mesmo ritmo. O BoP é o ajuste
-        artificial que a IMSA aplica a <strong>cada modelo, antes de cada pista</strong>, para colocar todos numa janela de desempenho parecida.
+  <!-- ══ REGRAS ══ -->
+  <section class="block" id="regras">
+    <header class="head">
+      <p class="head-label">Regulamento</p>
+      <h2 class="head-title">Duas regras que definem a corrida</h2>
+      <p class="head-text">
+        Uma existe para manter o grid equilibrado antes da largada.
+        A outra existe para manter a corrida indecisa até a bandeirada.
       </p>
+    </header>
 
-      <div class="dyn-block">
-        <h5>O que a IMSA mexe</h5>
-        <ul class="dyn-list">
-          <li><b>Peso</b> — adiciona ou remove lastro do carro</li>
-          <li><b>Potência</b> — via restritor de ar, pressão de turbo e mapa do motor (curva de potência)</li>
-          <li><b>Combustível</b> — capacidade do tanque e vazão máxima, o que altera o número de paradas</li>
-          <li><b>Aero</b> — em alguns casos, ajustes de asa/altura para calibrar o downforce</li>
-        </ul>
-      </div>
+    <div class="rules">
+      <article class="rule">
+        <p class="rule-tag">BoP</p>
+        <h3 class="rule-title">Balance of Performance</h3>
+        <p>
+          GTP e GT3 reúnem projetos radicalmente diferentes — um V8 turbo, um V6 biturbo,
+          um V12 aspirado, um boxer de seis cilindros. Sozinhos, jamais andariam no mesmo
+          ritmo. O BoP é o ajuste que a IMSA aplica a <strong>cada modelo, antes de cada
+          pista</strong>, para colocar todo mundo na mesma janela de desempenho.
+        </p>
 
-      <div class="dyn-block">
-        <h5>Como é calibrado</h5>
-        <p>A partir de <strong>telemetria de todas as corridas, sensores de torque e simulação</strong>. O objetivo é uma janela de equilíbrio por pista — e a tabela pode mudar no meio da temporada se um carro passar a dominar.</p>
-      </div>
+        <div class="rule-panel">
+          <h4>O que a IMSA ajusta</h4>
+          <ul class="dots">
+            <li><b>Peso</b> — lastro adicionado ou removido do carro</li>
+            <li><b>Potência</b> — restritor de ar, pressão de turbo e mapa do motor</li>
+            <li><b>Combustível</b> — capacidade do tanque e vazão, o que muda o número de paradas</li>
+            <li><b>Aerodinâmica</b> — em alguns casos, asa e altura, para calibrar o downforce</li>
+          </ul>
+        </div>
 
-      <p class="dyn-goal">Objetivo: que a vitória venha do talento do piloto e da estratégia da equipe — nunca de uma vantagem mecânica injusta.</p>
-    </article>
+        <div class="rule-panel">
+          <h4>Como é calibrado</h4>
+          <p>Por telemetria de todas as corridas, sensores de torque e simulação. A tabela pode mudar no meio da temporada se um carro passar a dominar.</p>
+        </div>
 
-    <article class="dyn">
-      <div class="dyn-icon">SC</div>
-      <h3>Safety Car &amp; Wave-By</h3>
-      <p>
-        Diante de um acidente ou pista bloqueada, entra a <strong>bandeira amarela total (full-course caution)</strong>: todo o campo
-        desacelera e o Safety Car recolhe o pelotão numa fila única. Aí começa uma coreografia que existe justamente para
-        <strong>não punir quem só teve azar de timing</strong>.
-      </p>
+        <p class="rule-close">A vitória vem do piloto e da estratégia — não de uma vantagem mecânica.</p>
+      </article>
 
-      <div class="dyn-block">
-        <h5>Passo a passo</h5>
-        <ol class="dyn-steps">
-          <li>Amarela total: todos reduzem e o SC agrupa o pelotão.</li>
-          <li>Boxes <strong>fecham</strong> — evita vantagem de quem estava chegando na hora exata.</li>
-          <li><b>Wave-by:</b> os carros uma volta atrás do líder da <strong>sua própria classe</strong> são liberados a ultrapassar o SC e recuperar a volta perdida.</li>
-          <li>Boxes <strong>reabrem</strong> (por ordem) para o rodízio de paradas.</li>
-          <li>Relargada: o líder dita o ritmo e a corrida recomeça, com as classes reagrupadas.</li>
-        </ol>
-      </div>
+      <article class="rule rule--caution">
+        <p class="rule-tag">SC</p>
+        <h3 class="rule-title">Safety Car e wave-by</h3>
+        <p>
+          Diante de um acidente ou de pista bloqueada, entra a
+          <strong>bandeira amarela total</strong>: o campo inteiro desacelera e o Safety Car
+          recolhe o pelotão em fila única. Aí começa uma coreografia que existe para
+          <strong>não punir quem só teve azar de timing</strong>.
+        </p>
 
-      <div class="dyn-block">
-        <h5>Por que importa</h5>
-        <p>Um Safety Car pode <strong>zerar uma vantagem de 40s</strong> ou devolver ao pelotão um carro que perdeu voltas nos boxes. É o que faz uma prova de 24h ser decidida nos <strong>minutos finais</strong>, e não na primeira hora.</p>
-      </div>
+        <div class="rule-panel">
+          <h4>Passo a passo</h4>
+          <ol class="steps">
+            <li>Amarela total: todos reduzem e o Safety Car agrupa o pelotão.</li>
+            <li>Os boxes <strong>fecham</strong>, para ninguém lucrar por estar chegando na hora exata.</li>
+            <li><b>Wave-by:</b> os carros uma volta atrás do líder <strong>da própria classe</strong> ultrapassam o Safety Car e recuperam a volta.</li>
+            <li>Os boxes <strong>reabrem</strong>, por ordem, para o rodízio de paradas.</li>
+            <li>Relargada: o líder dita o ritmo, com as classes reagrupadas.</li>
+          </ol>
+        </div>
 
-      <p class="dyn-goal">Resultado: mesmo após um problema, dá pra reencostar — os líderes chegam ao fim disputando lado a lado.</p>
-    </article>
-  </div>
+        <div class="rule-panel">
+          <h4>Por que importa</h4>
+          <p>Um Safety Car <strong>zera uma vantagem de 40 segundos</strong> ou devolve ao pelotão um carro que perdeu voltas nos boxes. É o que faz uma prova de 24 horas ser decidida nos minutos finais.</p>
+        </div>
 
-  <div class="dyn-strip">
-    <div class="dstat"><b>4</b><span>parâmetros ajustados pelo BoP</span></div>
-    <div class="dstat"><b>a cada pista</b><span>o BoP é recalibrado antes de toda etapa</span></div>
-    <div class="dstat"><b>por classe</b><span>o wave-by respeita o líder de cada categoria</span></div>
-    <div class="dstat"><b>até a bandeirada</b><span>corridas decididas nos minutos finais</span></div>
-  </div>
-</section>
+        <p class="rule-close">Depois de um problema, ainda dá para reencostar. Os líderes chegam ao fim lado a lado.</p>
+      </article>
+    </div>
+  </section>
 
-<!-- FOOTER -->
-<footer class="footer">
-  <p class="foot-brand">IMSA <span>HUB</span></p>
-  <p>Fan hub não-oficial · feito por fãs, para fãs. Dados da temporada 2026 do WeatherTech SportsCar Championship.</p>
-  <p class="foot-fine">IMSA, WeatherTech, GTP, LMP2, GTD e nomes de equipes/montadoras pertencem aos seus respectivos titulares. Projeto sem fins lucrativos.</p>
+</main>
+
+<!-- ══ RODAPÉ ══ -->
+<footer class="foot">
+  <p class="foot-mark"><span>IMSA</span> HUB</p>
+  <p>Fan hub não-oficial, feito por fãs. Dados da temporada 2026 do WeatherTech SportsCar Championship.</p>
+  <p class="foot-fine">
+    IMSA, WeatherTech, GTP, LMP2, GTD e os nomes de equipes e montadoras pertencem aos
+    respectivos titulares. Projeto sem fins lucrativos. Fotos e traçados via Wikimedia Commons.
+  </p>
 </footer>
+
+<!-- ══ FICHA DA ETAPA ══ -->
+<div class="sheet" id="trackSheet" hidden>
+  <div class="sheet-veil" data-close></div>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="tsName">
+    <button class="sheet-close" data-close><span aria-hidden="true">&times;</span><span class="sr">Fechar</span></button>
+    <div class="sheet-art sheet-art--map"><img id="tsImg" alt=""></div>
+    <div class="sheet-body">
+      <p class="sheet-tag" id="tsRound"></p>
+      <h3 id="tsName"></h3>
+      <p class="sheet-sub" id="tsLoc"></p>
+      <dl class="sheet-facts" id="tsFacts"></dl>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FICHA DO CARRO ══ -->
+<div class="sheet" id="carSheet" hidden>
+  <div class="sheet-veil" data-close></div>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="csName">
+    <button class="sheet-close" data-close><span aria-hidden="true">&times;</span><span class="sr">Fechar</span></button>
+    <div class="sheet-art sheet-art--photo"><img id="csImg" alt=""></div>
+    <div class="sheet-body">
+      <p class="sheet-tag" id="csClass"></p>
+      <h3 id="csName"></h3>
+      <p class="sheet-sub" id="csCar"></p>
+      <dl class="sheet-facts" id="csFacts"></dl>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <p class="noscript">Este guia monta o grid, o calendário e a tabela de pontos com JavaScript. Ative o JavaScript para ver o conteúdo completo.</p>
+</noscript>
 
 <script src="data.js"></script>
 <script src="script.js"></script>
