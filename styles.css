@@ -57,6 +57,7 @@
   --gutter: clamp(20px, 5vw, 72px);
   --max:    1360px;
   --raio:   4px;
+  --topbar: 78px;   /* altura da barra fixa: âncora do sticky e do scroll */
 
   --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
   --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
@@ -73,7 +74,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 88px;
+  scroll-padding-top: calc(var(--topbar) + 16px);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -201,8 +202,26 @@ strong, b { color: var(--giz); font-weight: 600; }
 .mark-sub { color: var(--fumaca); }
 
 .menu { display: flex; gap: var(--s-5); }
-.menu a { color: var(--fumaca); padding-block: 10px; transition: color .2s var(--ease); }
+.menu a {
+  position: relative; color: var(--fumaca); padding-block: 10px;
+  transition: color .2s var(--ease);
+}
 .menu a:hover { color: var(--giz); }
+
+/* Seção em que o leitor está agora — a página é longa e vale sinalizar. */
+.menu a[aria-current="true"] { color: var(--giz); }
+.menu a[aria-current="true"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 2px;
+  height: 2px; background: var(--gtdpro);
+}
+
+/* Quanto da página já passou */
+.topbar-progress {
+  position: absolute; left: 0; bottom: -1px; height: 2px; width: 0;
+  background: var(--gtdpro); opacity: 0;
+  transition: opacity .25s var(--ease);
+}
+.topbar.is-stuck .topbar-progress { opacity: 1; }
 
 .menu-toggle {
   display: none; background: none; border: 0; cursor: pointer;
@@ -222,7 +241,7 @@ strong, b { color: var(--giz); font-weight: 600; }
    ========================================================================== */
 .hero {
   position: relative; isolation: isolate; overflow: hidden;
-  padding: clamp(120px, 17vh, 190px) var(--gutter) clamp(56px, 8vw, 96px);
+  padding: clamp(104px, 13vh, 150px) var(--gutter) clamp(48px, 6vw, 72px);
 }
 
 /* ---- atmosfera em parallax ----
@@ -455,9 +474,76 @@ strong, b { color: var(--giz); font-weight: 600; }
 /* ==========================================================================
    9 · GRID · filtros, carros, ficha LMP2
    ========================================================================== */
-.filters {
-  display: flex; flex-wrap: wrap; gap: var(--s-2);
-  margin-bottom: clamp(28px, 4vw, 40px);
+/* Barra de controle fixa: com 27 cards, o filtro não pode subir junto. */
+.gridtools {
+  position: sticky; top: var(--topbar); z-index: 20;
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-3) 0;
+  margin-bottom: var(--s-4);
+  background: var(--asfalto-0);
+  border-bottom: 1px solid var(--risco);
+}
+
+.filters { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+.search { position: relative; display: flex; align-items: center; flex: 0 1 300px; }
+.search-icon {
+  position: absolute; left: 12px; width: 16px; height: 16px;
+  color: var(--fumaca); pointer-events: none;
+}
+.search input {
+  width: 100%; min-height: 44px;
+  padding: 0 var(--s-4) 0 36px;
+  font: inherit; font-size: var(--t-sm); color: var(--giz);
+  background: var(--asfalto-2); border: 1px solid var(--risco);
+  border-radius: 2px;
+}
+.search input::placeholder { color: var(--fumaca); }
+.search input:focus { border-color: var(--risco-alto); }
+.search input::-webkit-search-cancel-button { filter: invert(.6); cursor: pointer; }
+
+.gridstatus {
+  font-family: var(--f-mono); font-size: var(--t-tag);
+  text-transform: uppercase; letter-spacing: .12em; color: var(--fumaca);
+  min-height: 1.2em; margin-bottom: var(--s-4);
+}
+
+.gridempty { font-size: var(--t-sm); color: var(--giz-2); padding: var(--s-6) 0; }
+.linkish {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: var(--gtdpro);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ---- grupos por classe ---- */
+.fleet { margin-bottom: clamp(36px, 5vw, 56px); }
+.fleet:last-child { margin-bottom: 0; }
+
+.fleet-head {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s-3);
+  padding-bottom: var(--s-3); margin-bottom: var(--s-4);
+  border-bottom: 1px solid var(--risco);
+  border-left: 3px solid var(--c); padding-left: var(--s-4);
+}
+.fleet-plate {
+  font-family: var(--f-mono); font-size: var(--t-tag); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: var(--c); border: 1px solid var(--c); border-radius: 2px; padding: 3px 8px;
+}
+.fleet[data-class="gtp"] .fleet-plate { background: var(--gtp); color: #000; }
+.fleet-name {
+  font-size: var(--t-h3); font-weight: 600; color: var(--giz);
+  margin-right: auto;
+}
+.fleet-count {
+  font-family: var(--f-mono); font-size: var(--t-tag);
+  text-transform: uppercase; letter-spacing: .12em; color: var(--fumaca);
+}
+
+.fleet-grid {
+  display: grid; gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
 }
 .filter {
   display: inline-flex; align-items: center; gap: var(--s-2);
@@ -472,10 +558,8 @@ strong, b { color: var(--giz); font-weight: 600; }
   color: var(--asfalto-0); background: var(--giz); border-color: var(--giz);
 }
 
-.cars {
-  display: grid; gap: var(--s-4);
-  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
-}
+/* .cars agora só empilha os grupos; a grade vive dentro de .fleet-grid */
+.cars { display: block; }
 
 .car {
   display: flex; flex-direction: column; text-align: left;
@@ -550,6 +634,60 @@ strong, b { color: var(--giz); font-weight: 600; }
 /* ==========================================================================
    10 · CALENDÁRIO · a numeração aqui é real (rodadas 1 a 11)
    ========================================================================== */
+/* ---- régua da temporada ----
+   As etapas ficam posicionadas pela data real, então os vazios do
+   calendário (fevereiro, o intervalo de setembro) aparecem como vazios. */
+.rail-wrap { margin-bottom: clamp(40px, 6vw, 64px); }
+
+.rail {
+  position: relative; list-style: none;
+  height: 72px; margin-bottom: var(--s-2);
+  border-bottom: 1px solid var(--risco-alto);
+}
+
+.rail-tick {
+  position: absolute; bottom: 0; left: var(--x); translate: -50% 0;
+  width: 30px; height: var(--h);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  gap: 4px; padding: 0; cursor: pointer;
+  background: none; border: 0; color: inherit;
+}
+.rail-tick::after {
+  content: ""; width: 2px; height: 100%;
+  background: var(--fumaca);
+  transition: background .2s var(--ease), width .2s var(--ease);
+}
+.rail-tick .rail-num {
+  font-family: var(--f-mono); font-size: 10px; letter-spacing: .06em;
+  color: var(--fumaca);
+}
+
+.rail-tick.is-enduro::after { background: var(--gtdpro); width: 3px; }
+.rail-tick.is-done::after { background: var(--risco-alto); }
+.rail-tick.is-done .rail-num { color: var(--risco-alto); }
+.rail-tick.is-next::after { background: var(--giz); width: 3px; }
+.rail-tick.is-next .rail-num { color: var(--giz); font-weight: 600; }
+.rail-tick:hover::after { background: var(--giz); }
+
+.rail-months {
+  position: relative; height: 18px;
+  font-family: var(--f-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: .12em; color: var(--fumaca);
+}
+.rail-months span { position: absolute; left: var(--x); translate: -50% 0; }
+
+.rail-key {
+  display: flex; flex-wrap: wrap; gap: var(--s-4);
+  margin-top: var(--s-4);
+  font-family: var(--f-mono); font-size: var(--t-tag);
+  text-transform: uppercase; letter-spacing: .12em; color: var(--fumaca);
+}
+.rail-key-item { display: inline-flex; align-items: center; gap: var(--s-2); }
+.rail-key i { width: 3px; height: 14px; display: block; }
+.rail-key-enduro { background: var(--gtdpro); }
+.rail-key-sprint { background: var(--fumaca); }
+.rail-key-done { background: var(--risco-alto); }
+
 .rounds {
   list-style: none;
   display: grid; gap: var(--s-4);
@@ -858,7 +996,14 @@ strong, b { color: var(--giz); font-weight: 600; }
   .rank::before { left: 0; top: 0; width: 40px; height: 2px; }
   .rank-data { grid-column: 1; }
   .lmp2-specs { grid-template-columns: 1fr; }
-  .cars, .rounds { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .fleet-grid, .rounds { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+
+  /* sem espaço para os dois lado a lado; a busca ocupa a linha inteira */
+  .gridtools { position: static; flex-direction: column; align-items: stretch; }
+  .search { flex: 1 1 auto; }
+  .rail { height: 58px; }
+  .fleet-head { flex-wrap: wrap; }
+  .fleet-name { margin-right: 0; flex: 1 1 100%; order: 3; }
 
   .next { grid-template-columns: 1fr; }
   .next-count { justify-items: stretch; }
@@ -866,7 +1011,7 @@ strong, b { color: var(--giz); font-weight: 600; }
 }
 
 @media (max-width: 420px) {
-  .cars, .rounds { grid-template-columns: 1fr; }
+  .fleet-grid, .rounds { grid-template-columns: 1fr; }
 }
 
 /* ==========================================================================

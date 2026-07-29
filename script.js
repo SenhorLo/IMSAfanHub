@@ -129,8 +129,11 @@
       count.textContent = `${ENTRIES.length} carros listados · LMP2 em ficha técnica`;
     }
 
-    /* ---- cards ---- */
-    wrap.innerHTML = ENTRIES.map((e, i) => `
+    /* ---- cards, agrupados por classe ----
+       É assim que a própria modalidade publica lista de inscritos: primeiro
+       a classe, depois os carros dentro dela. Em "Todos", os grupos dão
+       leitura ao que senão seria um bloco único de 27 cards. */
+    const card = (e, i) => `
       <button class="car" data-class="${esc(e.cls)}" data-idx="${i}"
               style="--c:${classColor(e.cls)}" type="button">
         <span class="car-shot" style="--marca:${esc(BRAND[e.brand] || "#3B4653")}">
@@ -146,7 +149,28 @@
           <span class="car-team">${esc(e.team)}</span>
           <span class="car-drivers">${esc(e.drivers)}</span>
         </span>
-      </button>`).join("");
+      </button>`;
+
+    const comCards = CLASSES.filter((c) => ENTRIES.some((e) => e.cls === c.id));
+
+    wrap.innerHTML = comCards.map((c) => {
+      const daClasse = ENTRIES
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.cls === c.id);
+      const marcas = new Set(daClasse.map(({ e }) => e.brand)).size;
+
+      return `
+        <section class="fleet" data-class="${esc(c.id)}" style="--c:${classColor(c.id)}">
+          <header class="fleet-head">
+            <span class="fleet-plate">${esc(c.plate)}</span>
+            <h3 class="fleet-name">${esc(c.name)}</h3>
+            <span class="fleet-count" data-total="${daClasse.length}">
+              ${daClasse.length} carros · ${marcas} ${marcas === 1 ? "montadora" : "montadoras"}
+            </span>
+          </header>
+          <div class="fleet-grid">${daClasse.map(({ e, i }) => card(e, i)).join("")}</div>
+        </section>`;
+    }).join("");
 
     // Se a foto do Commons não carregar, o espaço vira a placa da montadora.
     $$(".car-shot img", wrap).forEach((img) => {
@@ -188,26 +212,109 @@
         ${o.id === "todos" ? "" : "<i aria-hidden=\"true\"></i>"}${esc(o.plate)}
       </button>`).join("");
 
-    function aplicar(alvo) {
+    /* ---- filtro de classe + busca por texto ---- */
+    const busca = $("#gridSearch");
+    const status = $("#gridStatus");
+    const vazio = $("#gridEmpty");
+    const limpar = $("#gridReset");
+
+    // Índice de busca: um texto por carro, sem acento, montado uma vez só.
+    // Escapes explícitos: o intervalo de marcas combinantes não sobrevive
+    // bem a cópia/colagem se escrito com os caracteres literais.
+    const semAcento = (s) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const indice = ENTRIES.map((e) =>
+      semAcento([e.num, e.team, e.car, e.brand, e.drivers].join(" ")));
+
+    // O LMP2 é ficha, não card, mas precisa responder à busca como os outros.
+    const indiceLMP2 = semAcento(
+      ["LMP2", "Le Mans Prototype 2", "Oreca 07", "Gibson GK428", "protótipo"]
+        .concat(LMP2.specs.map((s) => s.value + " " + s.label))
+        .join(" "));
+
+    let classeAtual = "todos";
+    let termo = "";
+
+    function aplicar() {
       $$(".filter", filters).forEach((b) => {
-        b.setAttribute("aria-pressed", String(b.dataset.filter === alvo));
+        b.setAttribute("aria-pressed", String(b.dataset.filter === classeAtual));
       });
+
+      const q = semAcento(termo.trim());
+      let visiveis = 0;
 
       $$(".car", wrap).forEach((card) => {
-        card.hidden = alvo !== "todos" && card.dataset.class !== alvo;
+        const i = +card.dataset.idx;
+        const daClasse = classeAtual === "todos" || card.dataset.class === classeAtual;
+        const casa = !q || indice[i].includes(q);
+        const mostra = daClasse && casa;
+        card.hidden = !mostra;
+        if (mostra) visiveis++;
       });
 
-      // O grid some quando só o LMP2 está selecionado; a ficha some no oposto.
-      wrap.hidden = alvo === "lmp2";
-      if (panel) panel.hidden = alvo !== "todos" && alvo !== "lmp2";
+      // Um grupo sem nenhum card visível não deve deixar o cabeçalho órfão.
+      $$(".fleet", wrap).forEach((grupo) => {
+        const vivos = $$(".car", grupo).filter((c) => !c.hidden).length;
+        grupo.hidden = vivos === 0;
+        const contador = $(".fleet-count", grupo);
+        const total = +contador.dataset.total;
+        contador.textContent = vivos === total
+          ? contador.dataset.rotulo
+          : `${vivos} de ${total} carros`;
+      });
+
+      // O LMP2 não tem card: aparece como ficha quando a busca não o exclui.
+      const mostraPainel =
+        (classeAtual === "todos" || classeAtual === "lmp2") &&
+        (!q || indiceLMP2.includes(q));
+      if (panel) panel.hidden = !mostraPainel;
+
+      wrap.hidden = visiveis === 0;
+      if (vazio) vazio.hidden = visiveis > 0 || mostraPainel;
+
+      if (status) {
+        const emClasse = classeAtual === "todos"
+          ? ""
+          : ` em ${byId(classeAtual) ? byId(classeAtual).plate : classeAtual}`;
+        const paraTermo = q ? ` para “${termo.trim()}”` : "";
+
+        if (!q && classeAtual === "todos") {
+          status.textContent = "";
+        } else if (visiveis === 0 && mostraPainel) {
+          // Dizer "0 carros" ao lado da ficha visível do LMP2 confunde.
+          status.textContent = `LMP2 não tem lista por carro${paraTermo} — veja a ficha técnica`;
+        } else {
+          status.textContent =
+            `${visiveis} ${visiveis === 1 ? "carro" : "carros"}${emClasse}${paraTermo}`;
+        }
+      }
     }
+
+    // Guarda o rótulo original de cada grupo para poder restaurá-lo.
+    $$(".fleet-count", wrap).forEach((el) => {
+      el.dataset.rotulo = el.textContent.trim();
+    });
 
     filters.addEventListener("click", (ev) => {
       const btn = ev.target.closest(".filter");
-      if (btn) aplicar(btn.dataset.filter);
+      if (!btn) return;
+      classeAtual = btn.dataset.filter;
+      aplicar();
     });
 
-    aplicar("todos");
+    if (busca) busca.addEventListener("input", () => { termo = busca.value; aplicar(); });
+
+    if (limpar) {
+      limpar.addEventListener("click", () => {
+        classeAtual = "todos";
+        termo = "";
+        if (busca) busca.value = "";
+        aplicar();
+        if (busca) busca.focus();
+      });
+    }
+
+    aplicar();
   })();
 
   /* ========================================================================
@@ -242,6 +349,55 @@
     $$(".round", list).forEach((btn) => {
       btn.addEventListener("click", () => openTrackSheet(SCHEDULE[+btn.dataset.idx]));
     });
+
+    /* ---- régua da temporada ----
+       Posiciona cada etapa pela data real dentro da janela da temporada,
+       para o intervalo entre as corridas ficar visível. */
+    const rail = $("#rail");
+    const meses = $("#railMonths");
+    if (!rail) return;
+
+    const dia = (s) => new Date(s + "T12:00:00").getTime();
+    const inicio = dia(SCHEDULE[0].end);
+    const fim = dia(SCHEDULE[SCHEDULE.length - 1].end);
+    const vao = fim - inicio;
+    const pos = (s) => ((dia(s) - inicio) / vao) * 92 + 4;   // 4%..96%, com folga nas bordas
+
+    const proximaIdx = SCHEDULE.findIndex((r) => new Date(r.end + "T23:59:59") >= agora);
+
+    rail.innerHTML = SCHEDULE.map((r, i) => {
+      const passou = new Date(r.end + "T23:59:59") < agora;
+      const estados = [
+        passou ? "is-done" : "",
+        r.enduro ? "is-enduro" : "",
+        i === proximaIdx ? "is-next" : "",
+      ].filter(Boolean).join(" ");
+      // Prova longa fica mais alta: a altura carrega a duração.
+      const altura = r.enduro ? 100 : 62;
+
+      return `
+        <li>
+          <button class="rail-tick ${estados}" type="button" data-idx="${i}"
+                  style="--x:${pos(r.end).toFixed(2)}%;--h:${altura}%"
+                  aria-label="${esc(`Rodada ${r.round}, ${r.name}, ${r.date}, ${r.len}`)}">
+            <span class="rail-num" aria-hidden="true">${r.round}</span>
+          </button>
+        </li>`;
+    }).join("");
+
+    $$(".rail-tick", rail).forEach((btn) => {
+      btn.addEventListener("click", () => openTrackSheet(SCHEDULE[+btn.dataset.idx]));
+    });
+
+    if (meses) {
+      const nomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out"];
+      meses.innerHTML = nomes.map((nome, m) => {
+        const marca = new Date(2026, m, 1).getTime();
+        if (marca < inicio || marca > fim) return "";
+        const x = ((marca - inicio) / vao) * 92 + 4;
+        return `<span style="--x:${x.toFixed(2)}%">${nome}</span>`;
+      }).join("");
+    }
   })();
 
   /* ========================================================================
@@ -476,6 +632,7 @@
     const toggle = $("#menuToggle");
     const foto = $("#heroPhoto");
     const hero = $("#topo");
+    const barra = $("#progress");
 
     // A foto desce a 30% da velocidade da página: o fundo fica para trás.
     const FATOR = 0.3;
@@ -497,9 +654,49 @@
           foto.style.transform = `translate3d(0, ${desloc.toFixed(1)}px, 0)`;
         }
 
+        if (barra) {
+          const total = document.documentElement.scrollHeight - window.innerHeight;
+          const pct = total > 0 ? Math.min(y / total, 1) * 100 : 0;
+          barra.style.width = pct.toFixed(2) + "%";
+        }
+
         agendado = false;
       });
     }, { passive: true });
+
+    /* ---- seção atual no menu ----
+       A página é longa; sem isso o leitor perde a referência de onde está. */
+    const links = $$(".menu a[href^='#']");
+    const secoes = links
+      .map((a) => ({ a, sec: document.getElementById(a.getAttribute("href").slice(1)) }))
+      .filter(({ sec }) => sec);
+
+    if (secoes.length && "IntersectionObserver" in window) {
+      const visiveis = new Set();
+
+      const marcar = () => {
+        // Entre as seções à vista, a que estiver mais acima manda.
+        let escolhida = null;
+        secoes.forEach(({ sec }) => {
+          if (!visiveis.has(sec)) return;
+          if (!escolhida || sec.offsetTop < escolhida.offsetTop) escolhida = sec;
+        });
+        secoes.forEach(({ a, sec }) => {
+          if (sec === escolhida) a.setAttribute("aria-current", "true");
+          else a.removeAttribute("aria-current");
+        });
+      };
+
+      const obs = new IntersectionObserver((entradas) => {
+        entradas.forEach((en) => {
+          if (en.isIntersecting) visiveis.add(en.target);
+          else visiveis.delete(en.target);
+        });
+        marcar();
+      }, { rootMargin: "-45% 0px -45% 0px" });
+
+      secoes.forEach(({ sec }) => obs.observe(sec));
+    }
 
     if (!bar || !toggle) return;
 

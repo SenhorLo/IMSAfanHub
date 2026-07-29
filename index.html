@@ -41,6 +41,8 @@
     <span class="menu-toggle-bars" aria-hidden="true"><span></span><span></span><span></span></span>
     <span class="sr">Abrir menu</span>
   </button>
+
+  <span class="topbar-progress" id="progress" aria-hidden="true"></span>
 </header>
 
 <main id="conteudo">
@@ -129,9 +131,27 @@
       </p>
     </header>
 
-    <div class="filters" role="group" aria-label="Filtrar o grid por classe" id="filters"></div>
+    <div class="gridtools">
+      <div class="filters" role="group" aria-label="Filtrar o grid por classe" id="filters"></div>
+
+      <div class="search">
+        <label class="sr" for="gridSearch">Buscar por equipe, piloto, carro ou número</label>
+        <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12.8 12.8 17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input type="search" id="gridSearch" placeholder="Equipe, piloto, carro ou número"
+               autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <p class="gridstatus" id="gridStatus" role="status" aria-live="polite"></p>
 
     <div class="cars" id="cars"></div>
+
+    <p class="gridempty" id="gridEmpty" hidden>
+      Nenhum carro corresponde à busca. <button type="button" class="linkish" id="gridReset">Limpar filtros</button>
+    </p>
 
     <!-- LMP2 não tem lista de inscritos por equipe: é um pacote técnico único -->
     <div class="lmp2" id="lmp2Panel">
@@ -153,6 +173,18 @@
         paralelo dentro da temporada. Abra uma etapa para ver o traçado e a ficha.
       </p>
     </header>
+
+    <!-- Régua da temporada: as etapas posicionadas pela data real, para a
+         cadência de janeiro a outubro ficar visível de uma vez. -->
+    <div class="rail-wrap">
+      <ol class="rail" id="rail" aria-label="Etapas da temporada em ordem cronológica"></ol>
+      <div class="rail-months" id="railMonths" aria-hidden="true"></div>
+      <p class="rail-key">
+        <span class="rail-key-item"><i class="rail-key-enduro"></i>Michelin Endurance Cup</span>
+        <span class="rail-key-item"><i class="rail-key-sprint"></i>Sprint</span>
+        <span class="rail-key-item"><i class="rail-key-done"></i>Já disputada</span>
+      </p>
+    </div>
 
     <ol class="rounds" id="rounds"></ol>
   </section>
