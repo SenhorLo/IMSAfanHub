@@ -28,19 +28,21 @@ const FONTE_THREE = "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.modu
    O código espelha para montar o contorno fechado. y = 0 é o chão.
    -------------------------------------------------------------------------- */
 const CARROS = {
-  // Porsche 963 — protótipo LMDh: rasteiro, largo, para-lamas marcados
+  /* Aston Martin Valkyrie — LMH. A frente mais característica do grid:
+     bico central muito baixo, um canal fundo de cada lado e os para-lamas
+     subindo destacados nas pontas. Daí o vale no meio do perfil. */
   gtp: {
-    largura: 2.00, altura: 1.06, comprimento: 5.10,
+    largura: 2.00, altura: 1.12, comprimento: 5.10,
     meiaFrente: [
-      [0.00, 0.42], [0.34, 0.45], [0.58, 0.55],
-      [0.78, 0.74], [0.92, 0.80], [1.00, 0.66], [1.00, 0.12],
+      [0.00, 0.34], [0.24, 0.36], [0.42, 0.32],
+      [0.60, 0.60], [0.84, 0.82], [1.00, 0.68], [1.00, 0.12],
     ],
-    cabine: { largura: 1.06, altura: 0.30, comprimento: 1.60, topo: 1.06, z: -0.10 },
-    asa:    { largura: 1.90, altura: 1.13, z: -2.15, corda: 0.42 },
+    cabine: { largura: 0.98, altura: 0.34, comprimento: 1.55, topo: 1.12, z: -0.10 },
+    asa:    { largura: 1.90, altura: 1.20, z: -2.15, corda: 0.42 },
     splitter: { largura: 2.04, prof: 0.34, y: 0.055 },
-    farois: [ [0.44, 0.52, 0.13, 0.055], [0.62, 0.56, 0.13, 0.055] ],  // quatro pontos
+    farois: [ [0.66, 0.62, 0.16, 0.06] ],
     roda: { raio: 0.36, largura: 0.32, dx: 0.86, dz: 1.55 },
-    barbatana: { altura: 0.30, comprimento: 1.60, z: -1.30 },
+    barbatana: { altura: 0.32, comprimento: 1.60, z: -1.30 },
   },
 
   // Oreca 07 — LMP2: mais estreito, nariz central saliente, barbatana alta
@@ -58,8 +60,23 @@ const CARROS = {
     barbatana: { altura: 0.32, comprimento: 1.50, z: -1.20 },
   },
 
-  // Porsche 911 GT3 R — para-lamas dianteiros mais altos que o capô central
+  // Ford Mustang GT3 — frente reta e alta, farol de três barras
   gtdpro: {
+    largura: 2.05, altura: 1.32, comprimento: 4.80,
+    meiaFrente: [
+      [0.00, 0.92], [0.42, 0.93], [0.72, 0.92],
+      [0.88, 0.98], [1.025, 0.90], [1.025, 0.14],
+    ],
+    cabine: { largura: 1.50, altura: 0.40, comprimento: 1.70, topo: 1.32, z: -0.45 },
+    asa:    { largura: 1.95, altura: 1.46, z: -2.05, corda: 0.44 },
+    splitter: { largura: 2.12, prof: 0.32, y: 0.06 },
+    farois: [ [0.66, 0.76, 0.055, 0.16], [0.76, 0.76, 0.055, 0.16], [0.86, 0.76, 0.055, 0.16] ],
+    roda: { raio: 0.34, largura: 0.32, dx: 0.88, dz: 1.42 },
+    barbatana: null,
+  },
+
+  // Porsche 911 GT3 R — para-lamas dianteiros mais altos que o capô central
+  gtd: {
     largura: 2.05, altura: 1.30, comprimento: 4.62,
     meiaFrente: [
       [0.00, 0.76], [0.30, 0.78], [0.54, 0.84],
@@ -71,21 +88,6 @@ const CARROS = {
     farois: [ [0.74, 0.90, 0.20, 0.20] ],       // redondo, no alto do para-lama
     faroisRedondos: true,
     roda: { raio: 0.34, largura: 0.32, dx: 0.88, dz: 1.36 },
-    barbatana: null,
-  },
-
-  // Ford Mustang GT3 — frente reta e alta, farol de três barras
-  gtd: {
-    largura: 2.05, altura: 1.32, comprimento: 4.80,
-    meiaFrente: [
-      [0.00, 0.92], [0.42, 0.93], [0.72, 0.92],
-      [0.88, 0.98], [1.025, 0.90], [1.025, 0.14],
-    ],
-    cabine: { largura: 1.50, altura: 0.40, comprimento: 1.70, topo: 1.32, z: -0.45 },
-    asa:    { largura: 1.95, altura: 1.46, z: -2.05, corda: 0.44 },
-    splitter: { largura: 2.12, prof: 0.32, y: 0.06 },
-    farois: [ [0.66, 0.76, 0.055, 0.16], [0.76, 0.76, 0.055, 0.16], [0.86, 0.76, 0.055, 0.16] ],
-    roda: { raio: 0.34, largura: 0.32, dx: 0.88, dz: 1.42 },
     barbatana: null,
   },
 };
@@ -332,18 +334,24 @@ function deveRenderizar() {
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     const AMPLITUDE = 0.16;             // radianos, pouco mais de 9 graus
 
-    palco.parentElement.addEventListener("pointermove", (ev) => {
+    const olharPara = (clientX) => {
       const r = palco.getBoundingClientRect();
       if (!r.width) return;
-      const nx = ((ev.clientX - r.left) / r.width - 0.5) * 2;   // -1 .. 1
+      // -1 na borda esquerda, +1 na direita, preso ao intervalo
+      const nx = Math.max(-1, Math.min(1, ((clientX - r.left) / r.width - 0.5) * 2));
       grupos.forEach((g) => { g.rotation.y = nx * AMPLITUDE; });
       desenhar();
-    }, { passive: true });
+    };
 
-    palco.parentElement.addEventListener("pointerleave", () => {
-      grupos.forEach((g) => { g.rotation.y = 0; });
-      desenhar();
-    }, { passive: true });
+    palco.parentElement.addEventListener("pointermove",
+      (ev) => olharPara(ev.clientX), { passive: true });
+
+    /* Ao sair, os carros ficam virados para o lado por onde o ponteiro
+       saiu, em vez de voltar ao centro. Usa a coordenada do próprio evento
+       de saída: se o ponteiro sair rápido, o último pointermove estaria
+       defasado e a pose final ficaria errada. */
+    palco.parentElement.addEventListener("pointerleave",
+      (ev) => olharPara(ev.clientX), { passive: true });
   }
 
   palco.classList.add("is-3d");
