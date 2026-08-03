@@ -252,13 +252,40 @@ function deveRenderizar() {
       if (vol > maior) { maior = vol; corpo = chave; }
     });
 
+    /* Segunda salvaguarda: peça que domina o modelo não é peça.
+
+       No arquivo da Valkyrie o material EXT_TYRE tem 36 mil dos 61 mil
+       triângulos, e EXT_RIMS outros 19 mil. Juntos são 89% do carro, ou
+       seja, o nome mente e eles cobrem lataria. Escurecê-los deixava o
+       carro 63% preto. Acima de 25% do total, o material vira carroceria. */
+    let total = 0;
+    const share = new Map();
+    raiz.traverse((o) => {
+      if (!o.isMesh || !o.material) return;
+      const tris = (o.geometry.index ? o.geometry.index.count
+                                     : o.geometry.attributes.position.count) / 3;
+      total += tris;
+      share.set(o.material.uuid, (share.get(o.material.uuid) || 0) + tris);
+    });
+    const dominante = (m) => total > 0 && (share.get(m.uuid) || 0) / total > 0.25;
+
     const cache = new Map();
     raiz.traverse((o) => {
       if (!o.isMesh || !o.material) return;
       const antigo = o.material;
 
-      // reconhecida como peça vira peça; o resto é pintura da classe
-      const peca = antigo.uuid === corpo ? null : classificar(antigo);
+      // reconhecida como peça vira peça, salvo se dominar o modelo
+      const peca = (antigo.uuid === corpo || dominante(antigo))
+        ? null
+        : classificar(antigo);
+
+      /* A decimação estraga parte das normais, e superfície com normal
+         errada fica escura por mais luz que se jogue nela. Recalcular a
+         partir da malha já simplificada corrige a maioria dos casos. */
+      if (o.geometry && !o.geometry.__normaisRefeitas) {
+        o.geometry.computeVertexNormals();
+        o.geometry.__normaisRefeitas = true;
+      }
 
       if (!peca) {
         o.material = pintura;
