@@ -62,14 +62,14 @@
     </div>
 
     <div class="hero-content">
-    <p class="hero-kicker">IMSA WeatherTech SportsCar Championship</p>
+    <p class="hero-kicker">Guia da temporada 2026 · fan hub não-oficial</p>
 
     <img class="hero-logo"
          src="https://commons.wikimedia.org/wiki/Special:FilePath/International%20Motor%20Sports%20Association%20logo%20%282014-present%29.svg"
          alt="IMSA · International Motor Sports Association"
          width="750" height="154" fetchpriority="high">
 
-    <h1 class="hero-title">Multiclasse</h1>
+    <h1 class="hero-title">WeatherTech<br>SportsCar Championship</h1>
 
     <figure class="lineup">
       <div class="lineup-stage" id="lineupStage" aria-hidden="true"></div>
@@ -368,6 +368,18 @@
 <noscript>
   <p class="noscript">Este guia monta o grid, o calendário e a tabela de pontos com JavaScript. Ative o JavaScript para ver o conteúdo completo.</p>
 </noscript>
+
+<!-- O GLTFLoader importa "three" por especificador nu, então precisa deste
+     mapa. Declarado aqui, antes de qualquer módulo, e com versão fixada.
+     Assim o loader e o cars3d.js compartilham a mesma cópia da biblioteca. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+  }
+}
+</script>
 
 <!-- Versão fixada de propósito: "latest" num CDN de terceiro muda sob os pés.
      defer preserva a ordem, então o GSAP existe antes de motion.js rodar e
