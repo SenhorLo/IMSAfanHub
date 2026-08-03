@@ -652,8 +652,9 @@ strong, b { color: var(--giz); font-weight: 600; }
   gap: 4px; padding: 0; cursor: pointer;
   background: none; border: 0; color: inherit;
 }
-.rail-tick::after {
-  content: ""; width: 2px; height: 100%;
+/* elemento real, não ::after, para o GSAP poder desenhá-la de baixo pra cima */
+.rail-bar {
+  display: block; width: 2px; height: 100%;
   background: var(--fumaca);
   transition: background .2s var(--ease), width .2s var(--ease);
 }
@@ -662,12 +663,12 @@ strong, b { color: var(--giz); font-weight: 600; }
   color: var(--fumaca);
 }
 
-.rail-tick.is-enduro::after { background: var(--gtdpro); width: 3px; }
-.rail-tick.is-done::after { background: var(--risco-alto); }
+.rail-tick.is-enduro .rail-bar { background: var(--gtdpro); width: 3px; }
+.rail-tick.is-done .rail-bar { background: var(--risco-alto); }
 .rail-tick.is-done .rail-num { color: var(--risco-alto); }
-.rail-tick.is-next::after { background: var(--giz); width: 3px; }
+.rail-tick.is-next .rail-bar { background: var(--giz); width: 3px; }
 .rail-tick.is-next .rail-num { color: var(--giz); font-weight: 600; }
-.rail-tick:hover::after { background: var(--giz); }
+.rail-tick:hover .rail-bar { background: var(--giz); }
 
 .rail-months {
   position: relative; height: 18px;

@@ -369,7 +369,13 @@
   <p class="noscript">Este guia monta o grid, o calendário e a tabela de pontos com JavaScript. Ative o JavaScript para ver o conteúdo completo.</p>
 </noscript>
 
-<script src="data.js"></script>
-<script src="script.js"></script>
+<!-- Versão fixada de propósito: "latest" num CDN de terceiro muda sob os pés.
+     defer preserva a ordem, então o GSAP existe antes de motion.js rodar e
+     o script.js já montou o DOM que a coreografia precisa medir. -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js" defer></script>
+<script src="data.js" defer></script>
+<script src="script.js" defer></script>
+<script src="motion.js" defer></script>
 </body>
 </html>

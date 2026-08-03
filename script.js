@@ -381,6 +381,7 @@
                   style="--x:${pos(r.end).toFixed(2)}%;--h:${altura}%"
                   aria-label="${esc(`Rodada ${r.round}, ${r.name}, ${r.date}, ${r.len}`)}">
             <span class="rail-num" aria-hidden="true">${r.round}</span>
+            <span class="rail-bar" aria-hidden="true"></span>
           </button>
         </li>`;
     }).join("");
