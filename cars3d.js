@@ -1,89 +1,97 @@
 /* ==========================================================================
-   IMSA HUB · carros em 3D na faixa de tráfego (Three.js)
+   IMSA HUB · os quatro carros da fila, em 3D, vistos de frente
 
-   Os três modelos são extrudados a partir do perfil lateral de carros reais
-   do grid, com as medidas de fábrica:
+   Nota sobre a origem dos modelos: procurei modelos prontos destes carros
+   e não há caminho legítimo. O Sketchfab exige conta autenticada para
+   baixar qualquer arquivo, inclusive os gratuitos, e os exemplares de lá
+   passam de 900 mil triângulos — dezenas de MB para algo de 250 px na
+   tela. TurboSquid e CGTrader são pagos. Então a geometria é construída
+   aqui, com as medidas de fábrica e a assinatura frontal de cada carro:
 
-     GTP   · Porsche 963 (LMDh)      5100 × 2000 × 1060 mm, entre-eixos 3148
-     LMP2  · Oreca 07                4745 × 1895 × 1045 mm, entre-eixos 3005
-     GT3   · Corvette Z06 GT3.R      ~4630 × 2050 × ~1200 mm, entre-eixos ~2725
+     GTP      Porsche 963 (LMDh)   2000 mm de largura, 1060 de altura
+              frente baixa e larga, farol de quatro pontos
+     LMP2     Oreca 07             1895 × 1045, nariz central saliente
+     GTD PRO  Porsche 911 GT3 R    para-lamas dianteiros altos, farol redondo
+     GTD      Ford Mustang GT3     frente reta e alta, farol de três barras
 
-   Por isso o protótipo aparece longo e rasteiro e o GT3 aparece curto e
-   alto: a diferença na tela é a diferença real entre os carros.
+   As cores são as das placas de classe, como pedido — sem pintura real.
 
-   O módulo é conservador de propósito. Ele só assume a faixa se houver
-   WebGL, se o sistema não pedir movimento reduzido e se a conexão não
-   estiver em modo de economia. Em qualquer outro caso a silhueta em SVG
-   continua no lugar e o Three.js nem chega a ser baixado.
+   A cena é estática: renderiza sob demanda, não em laço. Só há novo quadro
+   quando o ponteiro move, a janela muda de tamanho ou o tema recarrega.
    ========================================================================== */
 
 const FONTE_THREE = "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js";
 
 /* --------------------------------------------------------------------------
-   Perfis laterais, em metros, do fundo (traseira) para a frente.
-   x = 0 é a traseira, y = 0 é o assoalho.
+   Perfil FRONTAL de cada carro, em metros.
+   Meia-silhueta do centro (x = 0) para fora, do topo do capô até a base.
+   O código espelha para montar o contorno fechado. y = 0 é o chão.
    -------------------------------------------------------------------------- */
-const MODELOS = {
-  // Porsche 963 — LMDh: nariz muito baixo, cabine recuada, cauda longa
-  prototipoGTP: {
-    comprimento: 5.10, largura: 2.00, altura: 1.06, entreEixos: 3.148,
-    balancoDianteiro: 1.05,
-    raioRoda: 0.36, larguraRodaD: 0.30, larguraRodaT: 0.35,
-    perfil: [
-      [0.00, 0.22], [0.10, 0.70], [0.55, 0.76], [1.35, 0.79], [1.95, 0.83],
-      [2.30, 0.99], [2.70, 1.06], [3.20, 1.05], [3.62, 0.84], [3.95, 0.68],
-      [4.25, 0.71], [4.62, 0.48], [4.95, 0.30], [5.10, 0.17], [5.10, 0.07],
-      [4.40, 0.05], [0.55, 0.05], [0.00, 0.10],
+const CARROS = {
+  // Porsche 963 — protótipo LMDh: rasteiro, largo, para-lamas marcados
+  gtp: {
+    largura: 2.00, altura: 1.06, comprimento: 5.10,
+    meiaFrente: [
+      [0.00, 0.42], [0.34, 0.45], [0.58, 0.55],
+      [0.78, 0.74], [0.92, 0.80], [1.00, 0.66], [1.00, 0.12],
     ],
-    cabine: { de: 2.28, ate: 3.60, base: 0.84, topo: 1.05 },
-    asa: { de: 0.05, ate: 0.62, altura: 1.11, largura: 1.90 },
-    barbatana: { de: 0.62, ate: 2.30, base: 0.78, topo: 1.09 },
+    cabine: { largura: 1.06, altura: 0.30, comprimento: 1.60, topo: 1.06, z: -0.10 },
+    asa:    { largura: 1.90, altura: 1.13, z: -2.15, corda: 0.42 },
+    splitter: { largura: 2.04, prof: 0.34, y: 0.055 },
+    farois: [ [0.44, 0.52, 0.13, 0.055], [0.62, 0.56, 0.13, 0.055] ],  // quatro pontos
+    roda: { raio: 0.36, largura: 0.32, dx: 0.86, dz: 1.55 },
+    barbatana: { altura: 0.30, comprimento: 1.60, z: -1.30 },
   },
 
-  // Oreca 07 — LMP2: mesma família, porém mais curto e com cabine adiantada
-  prototipoLMP2: {
-    comprimento: 4.745, largura: 1.895, altura: 1.045, entreEixos: 3.005,
-    balancoDianteiro: 0.97,
-    raioRoda: 0.35, larguraRodaD: 0.29, larguraRodaT: 0.34,
-    perfil: [
-      [0.00, 0.22], [0.09, 0.68], [0.50, 0.73], [1.25, 0.76], [1.80, 0.80],
-      [2.12, 0.96], [2.50, 1.045], [2.98, 1.03], [3.36, 0.82], [3.66, 0.66],
-      [3.94, 0.69], [4.30, 0.46], [4.60, 0.28], [4.745, 0.16], [4.745, 0.06],
-      [4.10, 0.05], [0.50, 0.05], [0.00, 0.10],
+  // Oreca 07 — LMP2: mais estreito, nariz central saliente, barbatana alta
+  lmp2: {
+    largura: 1.895, altura: 1.045, comprimento: 4.745,
+    meiaFrente: [
+      [0.00, 0.48], [0.26, 0.50], [0.48, 0.54],
+      [0.70, 0.72], [0.84, 0.78], [0.948, 0.62], [0.948, 0.11],
     ],
-    cabine: { de: 2.10, ate: 3.34, base: 0.80, topo: 1.02 },
-    asa: { de: 0.04, ate: 0.58, altura: 1.09, largura: 1.80 },
-    barbatana: { de: 0.58, ate: 2.12, base: 0.75, topo: 1.07 },
+    cabine: { largura: 1.00, altura: 0.30, comprimento: 1.50, topo: 1.045, z: -0.05 },
+    asa:    { largura: 1.80, altura: 1.11, z: -2.00, corda: 0.40 },
+    splitter: { largura: 1.94, prof: 0.30, y: 0.05 },
+    farois: [ [0.52, 0.58, 0.19, 0.075] ],
+    roda: { raio: 0.35, largura: 0.31, dx: 0.80, dz: 1.45 },
+    barbatana: { altura: 0.32, comprimento: 1.50, z: -1.20 },
   },
 
-  // Corvette Z06 GT3.R — GT3: silhueta de carro de rua, estufa alta
-  gt3: {
-    comprimento: 4.63, largura: 2.05, altura: 1.20, entreEixos: 2.725,
-    balancoDianteiro: 1.03,
-    raioRoda: 0.34, larguraRodaD: 0.30, larguraRodaT: 0.33,
-    perfil: [
-      [0.00, 0.26], [0.12, 0.82], [0.55, 0.88], [1.00, 0.92], [1.45, 1.14],
-      [1.95, 1.20], [2.72, 1.19], [3.22, 0.96], [3.60, 0.84], [3.98, 0.86],
-      [4.32, 0.58], [4.55, 0.40], [4.63, 0.22], [4.63, 0.08], [4.00, 0.05],
-      [0.50, 0.05], [0.00, 0.12],
+  // Porsche 911 GT3 R — para-lamas dianteiros mais altos que o capô central
+  gtdpro: {
+    largura: 2.05, altura: 1.30, comprimento: 4.62,
+    meiaFrente: [
+      [0.00, 0.76], [0.30, 0.78], [0.54, 0.84],
+      [0.78, 1.00], [0.92, 1.02], [1.025, 0.86], [1.025, 0.14],
     ],
-    cabine: { de: 1.42, ate: 3.24, base: 0.90, topo: 1.19 },
-    asa: { de: 0.00, ate: 0.56, altura: 1.34, largura: 1.90 },
+    cabine: { largura: 1.46, altura: 0.42, comprimento: 1.80, topo: 1.30, z: -0.35 },
+    asa:    { largura: 1.92, altura: 1.44, z: -1.95, corda: 0.44 },
+    splitter: { largura: 2.10, prof: 0.30, y: 0.06 },
+    farois: [ [0.74, 0.90, 0.20, 0.20] ],       // redondo, no alto do para-lama
+    faroisRedondos: true,
+    roda: { raio: 0.34, largura: 0.32, dx: 0.88, dz: 1.36 },
+    barbatana: null,
+  },
+
+  // Ford Mustang GT3 — frente reta e alta, farol de três barras
+  gtd: {
+    largura: 2.05, altura: 1.32, comprimento: 4.80,
+    meiaFrente: [
+      [0.00, 0.92], [0.42, 0.93], [0.72, 0.92],
+      [0.88, 0.98], [1.025, 0.90], [1.025, 0.14],
+    ],
+    cabine: { largura: 1.50, altura: 0.40, comprimento: 1.70, topo: 1.32, z: -0.45 },
+    asa:    { largura: 1.95, altura: 1.46, z: -2.05, corda: 0.44 },
+    splitter: { largura: 2.12, prof: 0.32, y: 0.06 },
+    farois: [ [0.66, 0.76, 0.055, 0.16], [0.76, 0.76, 0.055, 0.16], [0.86, 0.76, 0.055, 0.16] ],
+    roda: { raio: 0.34, largura: 0.32, dx: 0.88, dz: 1.42 },
     barbatana: null,
   },
 };
 
-// Qual carro representa cada classe do grid
-const MODELO_DA_CLASSE = {
-  gtp: "prototipoGTP",
-  lmp2: "prototipoLMP2",
-  gtdpro: "gt3",
-  gtd: "gt3",
-};
+/* -------------------------------------------------------------------------- */
 
-/* --------------------------------------------------------------------------
-   Portões: sem qualquer um deles, o SVG continua e nada é baixado
-   -------------------------------------------------------------------------- */
 function temWebGL() {
   try {
     const c = document.createElement("canvas");
@@ -95,9 +103,8 @@ function temWebGL() {
 }
 
 function deveRenderizar() {
-  if (!document.getElementById("band")) return false;
+  if (!document.getElementById("lineupStage")) return false;
   if (typeof CLASSES === "undefined") return false;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
   if (navigator.connection && navigator.connection.saveData) return false;
   return temWebGL();
 }
@@ -111,218 +118,233 @@ function deveRenderizar() {
   try {
     THREE = await import(FONTE_THREE);
   } catch (e) {
-    return;                      // CDN fora do ar: a silhueta em SVG fica
+    return;                       // sem CDN, ficam os marcadores de reserva
   }
 
-  const lane = document.getElementById("band");
+  const palco = document.getElementById("lineupStage");
 
-  /* ---- cena ---- */
   const cena = new THREE.Scene();
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.domElement.className = "band-canvas";
-  lane.appendChild(renderer.domElement);
+  renderer.domElement.className = "lineup-canvas";
+  palco.appendChild(renderer.domElement);
 
-  /* Distância grande com ângulo pequeno: quase ortográfico. Dá profundidade
-     sem deformar os carros que estão nas pontas da faixa. */
-  const camera = new THREE.PerspectiveCamera(11, 1, 1, 400);
-  camera.position.set(7, 15, 60);
-  camera.lookAt(0, 0.45, 0);
+  /* Câmera longe com ângulo estreito: os quatro carros ficam quase de
+     frente, sem o dos cantos aparecer de lado. */
+  const camera = new THREE.PerspectiveCamera(12, 1, 1, 300);
+  const ALTURA_CAMERA = 2.05;
+  camera.position.set(0, ALTURA_CAMERA, 46);
+  camera.lookAt(0, 0.62, 0);
 
-  /* ---- luz: refletor de autódromo à noite ---- */
-  cena.add(new THREE.HemisphereLight(0x9fb6d4, 0x0a0d11, 1.15));
+  /* ---- luz: refletor de autódromo ---- */
+  cena.add(new THREE.HemisphereLight(0xa8bed8, 0x0b0e12, 1.05));
 
-  const refletor = new THREE.DirectionalLight(0xffffff, 2.4);
-  refletor.position.set(10, 26, 14);
-  cena.add(refletor);
+  const principal = new THREE.DirectionalLight(0xffffff, 2.5);
+  principal.position.set(6, 16, 20);
+  cena.add(principal);
 
-  const contraluz = new THREE.DirectionalLight(0x8fb2ff, 0.9);
-  contraluz.position.set(-16, 9, -12);
+  const lateral = new THREE.DirectionalLight(0x9fc0ff, 1.1);
+  lateral.position.set(-14, 7, 9);
+  cena.add(lateral);
+
+  const contraluz = new THREE.DirectionalLight(0xffffff, 0.7);
+  contraluz.position.set(0, 6, -18);
   cena.add(contraluz);
 
-  /* ---- material auxiliar ---- */
+  /* ---- materiais compartilhados ---- */
   const vidro = new THREE.MeshStandardMaterial({
-    color: 0x0b0f14, metalness: 0.45, roughness: 0.18,
+    color: 0x0a0e13, metalness: 0.4, roughness: 0.16,
   });
   const borracha = new THREE.MeshStandardMaterial({
-    color: 0x101317, metalness: 0.0, roughness: 0.95,
+    color: 0x0e1116, metalness: 0, roughness: 0.95,
   });
-  const asaMat = new THREE.MeshStandardMaterial({
-    color: 0x161b22, metalness: 0.3, roughness: 0.55,
+  const preto = new THREE.MeshStandardMaterial({
+    color: 0x151a21, metalness: 0.25, roughness: 0.6,
+  });
+  const farolMat = new THREE.MeshStandardMaterial({
+    color: 0xfff4d0, emissive: 0xffe9a8, emissiveIntensity: 1.4,
+    metalness: 0, roughness: 0.3,
   });
 
   /* --------------------------------------------------------------------
-     Monta um carro a partir do perfil lateral
+     Monta um carro a partir da meia-silhueta frontal
      -------------------------------------------------------------------- */
-  function montarCarro(spec, cor) {
-    const grupo = new THREE.Group();
+  function montar(spec, cor) {
+    const g = new THREE.Group();
 
-    const forma = new THREE.Shape();
-    spec.perfil.forEach(([x, y], i) => {
-      if (i === 0) forma.moveTo(x, y);
-      else forma.lineTo(x, y);
+    // Metalness baixo: sem environment map, material metálico devolve
+    // cinza e a placa branca do GTP deixaria de ser branca.
+    const pintura = new THREE.MeshStandardMaterial({
+      color: cor, metalness: 0.14, roughness: 0.42,
     });
+
+    /* corpo: espelha a meia-silhueta e extruda para trás */
+    const meia = spec.meiaFrente;
+    const forma = new THREE.Shape();
+    forma.moveTo(-meia[0][0], meia[0][1]);
+    for (let i = 1; i < meia.length; i++) forma.lineTo(-meia[i][0], meia[i][1]);
+    forma.lineTo(-meia[meia.length - 1][0], 0.045);
+    forma.lineTo(meia[meia.length - 1][0], 0.045);
+    for (let i = meia.length - 1; i >= 0; i--) forma.lineTo(meia[i][0], meia[i][1]);
     forma.closePath();
 
-    const carroceria = new THREE.Mesh(
+    const corpo = new THREE.Mesh(
       new THREE.ExtrudeGeometry(forma, {
-        depth: spec.largura, bevelEnabled: true,
-        bevelThickness: 0.035, bevelSize: 0.035, bevelSegments: 2, curveSegments: 6,
+        depth: spec.comprimento, bevelEnabled: true,
+        bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3, curveSegments: 4,
       }),
-      /* Metalness baixo de propósito: sem environment map, material
-         metálico devolve cinza, e a placa branca do GTP deixaria de ser
-         branca. Aqui a cor da classe precisa sobreviver à iluminação. */
-      new THREE.MeshStandardMaterial({
-        color: cor, metalness: 0.12, roughness: 0.46,
-      })
+      pintura
     );
-    carroceria.position.z = -spec.largura / 2;
-    grupo.add(carroceria);
+    corpo.position.z = -spec.comprimento + spec.comprimento / 2;
+    g.add(corpo);
 
-    // Estufa escura, um fio mais larga que a carroceria para aparecer nos flancos
+    /* cabine */
     const cab = spec.cabine;
-    const vidros = new THREE.Mesh(
-      new THREE.BoxGeometry(cab.ate - cab.de, cab.topo - cab.base, spec.largura * 1.01),
-      vidro
+    const teto = new THREE.Mesh(
+      new THREE.BoxGeometry(cab.largura, cab.altura, cab.comprimento), vidro
     );
-    vidros.position.set((cab.de + cab.ate) / 2, (cab.base + cab.topo) / 2, 0);
-    grupo.add(vidros);
+    teto.position.set(0, cab.topo - cab.altura / 2, cab.z);
+    g.add(teto);
 
-    // Asa traseira e flapes laterais
+    /* splitter dianteiro */
+    const sp = spec.splitter;
+    const splitter = new THREE.Mesh(
+      new THREE.BoxGeometry(sp.largura, 0.035, sp.prof), preto
+    );
+    splitter.position.set(0, sp.y, spec.comprimento / 2 - sp.prof / 2 + 0.06);
+    g.add(splitter);
+
+    /* asa traseira, com as duas laterais */
     const asa = spec.asa;
     const plano = new THREE.Mesh(
-      new THREE.BoxGeometry(asa.ate - asa.de, 0.05, asa.largura), asaMat
+      new THREE.BoxGeometry(asa.largura, 0.05, asa.corda), preto
     );
-    plano.position.set((asa.de + asa.ate) / 2, asa.altura, 0);
-    grupo.add(plano);
+    plano.position.set(0, asa.altura, asa.z);
+    g.add(plano);
 
     [-1, 1].forEach((lado) => {
-      const flape = new THREE.Mesh(
-        new THREE.BoxGeometry(asa.ate - asa.de + 0.08, 0.30, 0.035), asaMat
+      const lateralAsa = new THREE.Mesh(
+        new THREE.BoxGeometry(0.035, 0.30, asa.corda + 0.10), preto
       );
-      flape.position.set((asa.de + asa.ate) / 2, asa.altura - 0.10,
-                         lado * asa.largura / 2);
-      grupo.add(flape);
+      lateralAsa.position.set(lado * asa.largura / 2, asa.altura - 0.10, asa.z);
+      g.add(lateralAsa);
     });
 
-    // Barbatana: só os protótipos têm
+    /* barbatana, só protótipo */
     if (spec.barbatana) {
       const b = spec.barbatana;
       const fin = new THREE.Mesh(
-        new THREE.BoxGeometry(b.ate - b.de, b.topo - b.base, 0.03), asaMat
+        new THREE.BoxGeometry(0.03, b.altura, b.comprimento), preto
       );
-      fin.position.set((b.de + b.ate) / 2, (b.base + b.topo) / 2, 0);
-      grupo.add(fin);
+      fin.position.set(0, cab.topo - 0.02 + b.altura / 2 - 0.14, b.z);
+      g.add(fin);
     }
 
-    // Rodas, posicionadas pelo entre-eixos real
-    const eixoD = spec.comprimento - spec.balancoDianteiro;
-    const eixoT = eixoD - spec.entreEixos;
-
-    [[eixoD, spec.larguraRodaD], [eixoT, spec.larguraRodaT]].forEach(([x, larg]) => {
+    /* faróis: a assinatura frontal de cada carro */
+    const zFarol = spec.comprimento / 2 - 0.02;
+    spec.farois.forEach(([x, y, larg, alt]) => {
       [-1, 1].forEach((lado) => {
-        const roda = new THREE.Mesh(
-          new THREE.CylinderGeometry(spec.raioRoda, spec.raioRoda, larg, 18),
-          borracha
-        );
-        roda.rotation.x = Math.PI / 2;      // eixo da roda ao longo de Z
-        roda.position.set(x, spec.raioRoda,
-                          lado * (spec.largura / 2 - larg / 2 - 0.015));
-        grupo.add(roda);
+        const luz = spec.faroisRedondos
+          ? new THREE.Mesh(
+              new THREE.CylinderGeometry(larg / 2, larg / 2, 0.07, 14), farolMat)
+          : new THREE.Mesh(new THREE.BoxGeometry(larg, alt, 0.07), farolMat);
+        if (spec.faroisRedondos) luz.rotation.x = Math.PI / 2;
+        luz.position.set(lado * x, y, zFarol);
+        g.add(luz);
       });
     });
 
-    // Origem no meio do carro, para posicionar pelo centro
-    grupo.children.forEach((m) => { m.position.x -= spec.comprimento / 2; });
+    /* rodas */
+    const rd = spec.roda;
+    [1, -1].forEach((frente) => {
+      [-1, 1].forEach((lado) => {
+        const roda = new THREE.Mesh(
+          new THREE.CylinderGeometry(rd.raio, rd.raio, rd.largura, 20), borracha
+        );
+        roda.rotation.z = Math.PI / 2;          // eixo da roda ao longo de X
+        roda.position.set(lado * rd.dx, rd.raio, frente * rd.dz);
+        g.add(roda);
+      });
+    });
 
-    return grupo;
+    return g;
   }
 
   /* --------------------------------------------------------------------
-     Um carro por classe, na cor da placa e na linha de corrida dela
+     Um carro por classe, alinhado com a coluna de texto correspondente
      -------------------------------------------------------------------- */
   const estilo = getComputedStyle(document.documentElement);
   const corDaClasse = (id) =>
     new THREE.Color((estilo.getPropertyValue("--" + id) || "#ffffff").trim());
 
-  const LINHAS_Z = [-2.6, -0.9, 0.9, 2.6];     // linhas de corrida na pista
-  const VAO = 26;                               // metros visíveis na largura
-  const SEGUNDOS_POR_VOLTA = 0.1;               // mesma escala da versão CSS
+  const VAO = 13.2;                         // metros visíveis na largura
+  const COLUNA = VAO / 4;
 
-  const carros = CLASSES.map((c, i) => {
-    const spec = MODELOS[MODELO_DA_CLASSE[c.id]] || MODELOS.gt3;
-    const obj = montarCarro(spec, corDaClasse(c.id));
-    obj.position.z = LINHAS_Z[i] ?? 0;
+  const grupos = CLASSES.map((c, i) => {
+    const spec = CARROS[c.id] || CARROS.gtd;
+    const obj = montar(spec, corDaClasse(c.id));
+    // centro da coluna i, na mesma grade de quatro do texto
+    obj.position.x = (i - 1.5) * COLUNA;
     cena.add(obj);
-    return { obj, periodo: c.lap * SEGUNDOS_POR_VOLTA, fase: i * 0.11 };
+    return obj;
   });
 
   /* ---- dimensionamento ---- */
   function redimensionar() {
-    /* clientWidth/Height, não getBoundingClientRect: o rect inclui o
-       transform, e a animação de entrada deixa a faixa em scaleX 0.35.
-       Medir por ali dimensionaria o canvas a 35% e ele sairia borrado
-       quando a animação terminasse. */
-    const w = lane.clientWidth;
-    const h = lane.clientHeight;
+    /* clientWidth, não getBoundingClientRect: o rect inclui transform, e a
+       animação de entrada mexeria na medida. */
+    const w = palco.clientWidth;
+    const h = palco.clientHeight;
     if (!w || !h) return;
+
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // Mantém o vão horizontal constante, seja qual for a altura da faixa
+
     const distancia = camera.position.length();
     const fovH = 2 * Math.atan((VAO / 2) / distancia);
     camera.fov = THREE.MathUtils.radToDeg(
       2 * Math.atan(Math.tan(fovH / 2) / camera.aspect)
     );
     camera.updateProjectionMatrix();
+    desenhar();
+  }
+
+  /* ---- render sob demanda: a cena é parada ---- */
+  let pedido = null;
+  function desenhar() {
+    if (pedido !== null) return;
+    pedido = requestAnimationFrame(() => {
+      pedido = null;
+      renderer.render(cena, camera);
+    });
   }
 
   redimensionar();
-  if (window.ResizeObserver) new ResizeObserver(redimensionar).observe(lane);
+  if (window.ResizeObserver) new ResizeObserver(redimensionar).observe(palco);
   else window.addEventListener("resize", redimensionar);
-  // Se a faixa ainda media zero na primeira passada, o load resolve.
   window.addEventListener("load", redimensionar);
 
-  /* ---- laço ---- */
-  let raf = null;
-  let tempo = 0;
-  let ultimo = performance.now();
+  /* ---- leve reação ao ponteiro, para dar volume ----
+     Não é rotação automática: os carros ficam de frente, e só acompanham
+     de leve o ponteiro. Quem pede movimento reduzido não recebe nada. */
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const AMPLITUDE = 0.16;             // radianos, pouco mais de 9 graus
 
-  function quadro(agora) {
-    const dt = Math.min((agora - ultimo) / 1000, 0.05);   // trava after-tab-switch
-    ultimo = agora;
-    tempo += dt;
+    palco.parentElement.addEventListener("pointermove", (ev) => {
+      const r = palco.getBoundingClientRect();
+      if (!r.width) return;
+      const nx = ((ev.clientX - r.left) / r.width - 0.5) * 2;   // -1 .. 1
+      grupos.forEach((g) => { g.rotation.y = nx * AMPLITUDE; });
+      desenhar();
+    }, { passive: true });
 
-    carros.forEach(({ obj, periodo, fase }) => {
-      const p = ((tempo / periodo) + fase) % 1;
-      obj.position.x = -VAO * 0.6 + p * VAO * 1.2;
-    });
-
-    renderer.render(cena, camera);
-    raf = requestAnimationFrame(quadro);
+    palco.parentElement.addEventListener("pointerleave", () => {
+      grupos.forEach((g) => { g.rotation.y = 0; });
+      desenhar();
+    }, { passive: true });
   }
 
-  function tocar() {
-    if (raf === null) { ultimo = performance.now(); raf = requestAnimationFrame(quadro); }
-  }
-  function parar() {
-    if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
-  }
-
-  // Fora da tela não há o que animar
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(([e]) => (e.isIntersecting ? tocar() : parar()))
-      .observe(lane);
-  } else {
-    tocar();
-  }
-  document.addEventListener("visibilitychange", () =>
-    document.hidden ? parar() : tocar());
-
-  tocar();
-
-  // Só agora a silhueta em SVG sai de cena: o 3D já está desenhando
-  lane.classList.add("is-3d");
+  palco.classList.add("is-3d");
 })();

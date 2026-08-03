@@ -128,7 +128,7 @@ strong, b { color: var(--giz); font-weight: 600; }
 .head-label,
 .mark-sub,
 .menu a,
-.band-legend dt,
+.lineup-slot-plate,
 .clock-unit,
 .next-label,
 .rank-plate,
@@ -294,76 +294,78 @@ strong, b { color: var(--giz); font-weight: 600; }
   letter-spacing: -.03em;
 }
 
-/* ---- assinatura: a faixa de tráfego ---- */
-.band { margin-top: clamp(40px, 6vw, 72px); }
+/* ---- assinatura: a fila de largada ----
+   Os quatro carros de frente, lado a lado, com o tempo embaixo. O palco em
+   3D e as colunas de texto usam a mesma grade de quatro, então cada carro
+   fica alinhado com o próprio tempo. */
+.lineup { margin-top: clamp(40px, 6vw, 72px); }
 
-.band-lane {
-  position: relative; overflow: hidden;
-  height: clamp(150px, 19vw, 232px);
+.lineup-stage {
+  position: relative;
+  height: clamp(160px, 21vw, 280px);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--risco-alto);
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .42) 0 30px, transparent 30px 70px) center / 100% 2px no-repeat,
-    linear-gradient(180deg, #1A2028 0%, #10151A 55%, #171D24 100%);
-  border-top: 2px solid rgba(255, 255, 255, .5);
-  border-bottom: 2px solid rgba(255, 255, 255, .5);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-          mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+    radial-gradient(120% 80% at 50% 100%, rgba(80, 104, 132, .16), transparent 70%);
 }
 
-.runner {
-  position: absolute; inset-block: 0; left: 0; width: 100%;
-  pointer-events: none;
-  animation: volta var(--dur) linear infinite;
+/* Marcador de reserva: aparece enquanto o 3D carrega e fica se não houver
+   WebGL. Não tenta imitar carro — é só a placa da classe. */
+.lineup-slot {
+  display: grid; place-items: center; align-content: end;
+  padding-bottom: var(--s-5);
 }
-@keyframes volta {
-  from { transform: translateX(-14%); }
-  to   { transform: translateX(100%); }
+.lineup-slot-plate {
+  font-family: var(--f-mono); font-size: var(--t-tag); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .14em;
+  color: var(--c); border: 1px solid var(--c); border-radius: 2px;
+  padding: 6px 12px; opacity: .55;
 }
+.lineup-stage.is-3d .lineup-slot { visibility: hidden; }
 
-/* Tela do 3D sobre o asfalto. Enquanto ela não assume, a silhueta em SVG
-   é o que aparece — por isso o .is-3d só entra depois do primeiro desenho. */
-.band-canvas {
+.lineup-canvas {
   position: absolute; inset: 0; width: 100%; height: 100%;
   display: block; pointer-events: none;
 }
-.band-lane.is-3d .runner { display: none; }
 
-.runner-car {
-  position: absolute; left: 0; top: var(--y); translate: 0 -50%;
-  width: clamp(38px, 4.4vw, 58px); line-height: 0;
+/* colunas de dados, na mesma grade de quatro do palco */
+.lineup-info {
+  list-style: none;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0 var(--s-3);
+  margin-top: var(--s-4);
 }
-.runner-svg { width: 100%; height: auto; fill: var(--c); display: block; }
+.lineup-col {
+  display: grid; gap: 2px; align-content: start;
+  padding: 0 var(--s-3);
+  border-left: 2px solid var(--c);
+}
+.lineup-plate {
+  font-family: var(--f-mono); font-size: var(--t-tag); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .14em; color: var(--c);
+}
+.lineup-car {
+  font-size: .95rem; font-weight: 600; color: var(--giz); line-height: 1.25;
+  margin-top: 2px;
+}
+.lineup-kind {
+  font-family: var(--f-mono); font-size: var(--t-tag);
+  text-transform: uppercase; letter-spacing: .12em; color: var(--fumaca);
+}
+.lineup-lap {
+  font-family: var(--f-mono); font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 500; color: var(--giz); font-variant-numeric: tabular-nums;
+  margin-top: var(--s-2);
+}
+.lineup-gap {
+  font-family: var(--f-mono); font-size: var(--t-tag);
+  letter-spacing: .08em; color: var(--gtdpro);
+}
+.lineup-gap.is-ref { color: var(--fumaca); }
 
-/* rastro: quanto mais rápida a classe, mais longo */
-.runner-car::before {
-  content: ""; position: absolute; right: 100%; top: 62%; translate: 0 -50%;
-  width: var(--trail); height: 3px;
-  background: linear-gradient(270deg, var(--c), transparent);
-  opacity: .45;
-}
-
-.band-caption {
-  display: grid; grid-template-columns: auto 1fr;
-  gap: var(--s-5) clamp(28px, 5vw, 64px);
-  align-items: start;
-  margin-top: var(--s-5);
-}
-
-.band-legend { display: grid; gap: var(--s-2); }
-.band-legend > div {
-  display: grid; grid-template-columns: 10px 5.5rem auto;
-  align-items: center; gap: var(--s-3);
-}
-.band-legend i {
-  width: 10px; height: 10px; background: var(--c); border-radius: 50%;
-}
-.band-legend dt { color: var(--fumaca); }
-.band-legend dd {
-  font-family: var(--f-mono); font-size: var(--t-sm); font-weight: 500;
-  color: var(--giz); font-variant-numeric: tabular-nums;
-}
-
-.band-note {
-  max-width: 48ch; font-size: var(--t-sm); color: var(--fumaca);
+.lineup-note {
+  max-width: 62ch; margin-top: var(--s-5);
+  font-size: var(--t-sm); color: var(--fumaca);
   border-left: 1px solid var(--risco); padding-left: clamp(16px, 2vw, 24px);
 }
 
@@ -982,8 +984,7 @@ strong, b { color: var(--giz); font-weight: 600; }
   .rank { grid-template-columns: 110px minmax(0, 1fr); }
   .rank-data { grid-column: 2; }
   .points, .rules, .lmp2 { grid-template-columns: 1fr; }
-  .band-caption { grid-template-columns: 1fr; }
-  .band-note { border-left: 0; border-top: 1px solid var(--risco); padding: var(--s-4) 0 0; }
+  .lineup-note { border-left: 0; border-top: 1px solid var(--risco); padding: var(--s-4) 0 0; }
   .sheet-card { grid-template-columns: 1fr; margin-top: 4vh; }
   .sheet-art--map img, .sheet-art--photo img { max-height: 260px; }
 }
@@ -1036,8 +1037,6 @@ strong, b { color: var(--giz); font-weight: 600; }
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
   }
-
-  .runner { animation: none; transform: translateX(var(--parado)); }
 
   /* a foto fica parada; a atmosfera permanece, o movimento não */
   .hero-photo { transform: none !important; }

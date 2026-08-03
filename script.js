@@ -32,64 +32,44 @@
   const prefersReducedMotion = () =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ------------------------------------------------------------------------
-     Silhuetas de carro, vistas de lado, viradas para a direita.
-     São duas porque a diferença real do grid é essa: protótipo puro de
-     corrida (GTP e LMP2) contra carro de GT derivado de rua (GTD Pro e GTD).
-     A cor continua identificando a classe específica.
-     ------------------------------------------------------------------------ */
-  const SILHUETAS = {
-    // baixo, longo, cabine quase rente ao capô, asa alta e fina
-    prototipo: `
-      <path d="M2 6.2h13.4v2.3H2z"/>
-      <path d="M7.6 7.4h2.2v4.2H7.6z"/>
-      <path d="M61.5 18.5 57 12.4 45 10.4 36 8 26 7.5 17 8.8 10 10.4 4 12.4 3 18.5Z"/>
-      <circle cx="16.6" cy="18" r="4.6"/>
-      <circle cx="49" cy="18" r="4.6"/>`,
-    // cabine alta e recuada, montantes inclinados, conjunto mais encorpado
-    gt: `
-      <path d="M3 6.6h13v2.3H3z"/>
-      <path d="M8.4 7.8h2.2v3.9H8.4z"/>
-      <path d="M61 18.5 59.4 13 52 11.5 45.5 5.6 41 4 27 3.6 20.6 5.6 15 11.5 5 13 4 18.5Z"/>
-      <circle cx="17" cy="18" r="4.8"/>
-      <circle cx="48" cy="18" r="4.8"/>`,
-  };
-
-  const carroSVG = (tipo) =>
-    `<svg class="runner-svg" viewBox="0 0 64 24" aria-hidden="true" focusable="false">${
-      SILHUETAS[tipo] || SILHUETAS.gt
-    }</svg>`;
-
   /* ========================================================================
-     1 · Faixa de tráfego
-     Cada classe circula no seu tempo de volta real. O GTP alcança o GTD
-     na tela porque alcança mesmo na pista.
+     1 · Fila de largada
+     Os quatro carros lado a lado, de frente, com o tempo de volta e o
+     intervalo para a classe mais rápida logo abaixo. Os modelos em 3D
+     entram por cars3d.js; aqui fica o texto, que é o conteúdo.
      ======================================================================== */
-  (function trafficBand() {
-    const lane = $("#band");
-    const legend = $("#bandLegend");
-    if (!lane || !legend) return;
+  (function lineup() {
+    const palco = $("#lineupStage");
+    const info = $("#lineupInfo");
+    if (!palco || !info) return;
 
-    const SEGUNDOS_POR_VOLTA = 0.1;   // 1s de pista ≈ 0,1s de animação
-    const LINHAS = ["26%", "42%", "60%", "76%"];      // linhas de corrida
-    const PARADOS = ["10%", "34%", "58%", "78%"];     // posições sem animação
-    const maisLento = Math.max(...CLASSES.map((c) => c.lap));
+    // O intervalo para a classe mais rápida é o dado que resume o multiclasse.
+    const maisRapida = Math.min(...CLASSES.map((c) => c.lap));
 
-    lane.innerHTML = CLASSES.map((c, i) => {
-      const dur = (c.lap * SEGUNDOS_POR_VOLTA).toFixed(2);
-      const trail = Math.round(40 + (maisLento - c.lap) * 4);   // rastro maior = mais rápido
-      return `
-        <div class="runner" style="--c:${classColor(c.id)};--y:${LINHAS[i]};--dur:${dur}s;--trail:${trail}px;--parado:${PARADOS[i]}">
-          <span class="runner-car">${carroSVG(c.type)}</span>
-        </div>`;
-    }).join("");
-
-    legend.innerHTML = CLASSES.map((c) => `
-      <div>
-        <i style="--c:${classColor(c.id)}"></i>
-        <dt>${esc(c.plate)}</dt>
-        <dd>${esc(c.lapLabel)}</dd>
+    /* Marcadores de reserva: é o que aparece enquanto o 3D carrega, e o que
+       fica para sempre se não houver WebGL. Não fingem ser carro. */
+    palco.innerHTML = CLASSES.map((c) => `
+      <div class="lineup-slot" style="--c:${classColor(c.id)}">
+        <span class="lineup-slot-plate">${esc(c.plate)}</span>
       </div>`).join("");
+
+    info.innerHTML = CLASSES.map((c) => {
+      const gap = c.lap - maisRapida;
+      // Curto de propósito: em quatro colunas num celular, "por volta"
+      // quebraria em três linhas. A nota abaixo já explica o intervalo.
+      const gapTxt = gap === 0
+        ? "referência"
+        : `+${gap.toFixed(1).replace(".", ",")} s/volta`;
+
+      return `
+        <li class="lineup-col" style="--c:${classColor(c.id)}">
+          <p class="lineup-plate">${esc(c.plate)}</p>
+          <p class="lineup-car">${esc(c.modelo)}</p>
+          <p class="lineup-kind">${esc(c.modeloNota)}</p>
+          <p class="lineup-lap">${esc(c.lapLabel)}</p>
+          <p class="lineup-gap${gap === 0 ? " is-ref" : ""}">${esc(gapTxt)}</p>
+        </li>`;
+    }).join("");
   })();
 
   /* ========================================================================

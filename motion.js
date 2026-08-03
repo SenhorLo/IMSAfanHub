@@ -54,13 +54,11 @@
       .from(".hero-kicker", { opacity: 0, y: 12 }, 0.1)
       .from(".hero-logo", { opacity: 0, y: 18 }, 0.22)
       .from(".hero-title", { opacity: 0, y: 26 }, 0.36)
-      .from(".band-lane", {
-        scaleX: 0.35, opacity: 0, transformOrigin: "left center", duration: 0.9,
-      }, 0.5)
-      // Só opacidade nos carros: o transform é da animação de volta em CSS.
-      .from(".runner", { opacity: 0, duration: 0.5, stagger: 0.08 }, 0.95)
-      .from(".band-legend > div", { opacity: 0, x: -12, duration: 0.45, stagger: 0.07 }, 1.0)
-      .from(".band-note", { opacity: 0, duration: 0.5 }, 1.1)
+      /* Só opacidade no palco: escalar aqui mexeria no tamanho medido pelo
+         canvas do 3D e ele nasceria borrado. */
+      .from(".lineup-stage", { opacity: 0, duration: 0.8 }, 0.5)
+      .from(".lineup-col", { opacity: 0, y: 14, duration: 0.5, stagger: 0.08 }, 0.85)
+      .from(".lineup-note", { opacity: 0, duration: 0.5 }, 1.1)
       .from(".next", { opacity: 0, y: 18 }, 1.2);
 
     // Agora que a timeline existe, saltar para o fim se a chegada foi tarde.
