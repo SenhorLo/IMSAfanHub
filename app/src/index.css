@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   IMSA HUB · tema
+   Tinta profunda #0c0f13, cinza-aço #9aa4ae como cromo neutro, e as quatro
+   cores de placa de classe como única saturação — igual ao vídeo de fundo.
+   ========================================================================== */
+:root {
+  --tinta:  #0c0f13;
+  --aco:    #9aa4ae;
+  --gtp:    #f1f3f5;
+  --lmp2:   #4c9aff;
+  --gtdpro: #ff4f3e;
+  --gtd:    #2fd463;
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: "Inter Tight", system-ui, sans-serif;
+  background: var(--tinta);
+  color: #fff;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 { letter-spacing: -0.03em; }
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+:focus-visible { outline: 2px solid var(--aco); outline-offset: 3px; }
+
+/* ---------- vidro ---------- */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+    rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+    rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---------- réguas traçadas ---------- */
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(154,164,174,0.8), transparent);
+  transform-origin: left;
+}
+.rule-v {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(154,164,174,0.65), transparent);
+}
+.dim-label {
+  color: var(--aco);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  letter-spacing: 0.28em;
+}
+
+/* ---------- animações ---------- */
+@keyframes blurFadeUp {
+  from { opacity: 0; filter: blur(20px); transform: translateY(40px); }
+  to   { opacity: 1; filter: blur(0);    transform: translateY(0); }
+}
+.animate-blur-fade-up {
+  opacity: 0;
+  animation: blurFadeUp 1.1s ease-out forwards;
+}
+
+@keyframes drawLine {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.animate-draw { transform: scaleX(0); animation: drawLine 0.9s ease-out forwards; }
+
+@keyframes bobDown {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+.animate-bob { animation: bobDown 2s ease-in-out infinite; }
+
+/* ---------- movimento reduzido ----------
+   Sem desfoque, sem traço, sem balanço. O scrub do vídeo passa a ser
+   direto (sem amortecimento) no próprio componente. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-blur-fade-up { opacity: 1; animation: none; filter: none; transform: none; }
+  .animate-draw { transform: none; animation: none; }
+  .animate-bob { animation: none; }
+  .grain { display: none; }
+}
