@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Menu, X, ArrowRight, ChevronsDown, Gauge, Timer, Flag,
   LayoutGrid, BookOpen, CircleDot,
@@ -43,10 +43,6 @@ const CLASSES = [
 ];
 
 const NAV = ["Classes", "Grid", "Calendário", "Regras"];
-
-const semMovimento = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* Opacidade de um beat dentro da sua janela de progresso, com bordas
    suaves para que só um texto seja legível de cada vez. */
@@ -273,22 +269,18 @@ export default function App() {
   const trilhaRef = useRef(null);
   const videoRef = useRef(null);
   const [progresso, setProgresso] = useState(0);
-  const [duracaoOk, setDuracaoOk] = useState(false);
 
-  const alvo = useRef(0);
-  const atual = useRef(0);
-  const rafId = useRef(null);
-
-  /* ---- progresso da rolagem ---- */
+  /* ---- progresso da rolagem ----
+     O vídeo roda sozinho em loop; a rolagem não mexe mais no playhead.
+     Este progresso continua servindo às legendas e ao trilho lateral,
+     para que só uma classe seja lida de cada vez. */
   useEffect(() => {
     const medir = () => {
       const el = trilhaRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
       const curso = r.height - window.innerHeight;
-      const p = curso > 0 ? Math.min(1, Math.max(0, -r.top / curso)) : 0;
-      alvo.current = p;
-      setProgresso(p);
+      setProgresso(curso > 0 ? Math.min(1, Math.max(0, -r.top / curso)) : 0);
     };
 
     medir();
@@ -300,47 +292,20 @@ export default function App() {
     };
   }, []);
 
-  /* ---- scrub amortecido ----
-     current += (target - current) * 0.1 por quadro, e só escreve em
-     currentTime quando a diferença passa de 0.01s. Sob movimento reduzido
-     a busca é direta, sem amortecimento. */
-  const aplicar = useCallback(() => {
-    const v = videoRef.current;
-    if (!v || !duracaoOk) return;
-
-    const dur = v.duration;
-    if (!isFinite(dur) || v.readyState < 2) return;
-
-    const alvoTempo = alvo.current * dur;
-
-    if (semMovimento()) {
-      if (Math.abs(alvoTempo - v.currentTime) > 0.01) {
-        try { v.currentTime = alvoTempo; } catch (e) { /* iOS */ }
-      }
-      return;
-    }
-
-    atual.current += (alvoTempo - atual.current) * 0.1;
-    if (Math.abs(alvoTempo - atual.current) > 0.01) {
-      try { v.currentTime = atual.current; } catch (e) { /* iOS */ }
-    }
-  }, [duracaoOk]);
-
+  /* Alguns navegadores recusam o autoplay mesmo com muted; se isso
+     acontecer, uma tentativa no primeiro toque resolve. */
   useEffect(() => {
-    if (!duracaoOk) return;
-    const laco = () => { aplicar(); rafId.current = requestAnimationFrame(laco); };
-    rafId.current = requestAnimationFrame(laco);
-    return () => { if (rafId.current) cancelAnimationFrame(rafId.current); };
-  }, [duracaoOk, aplicar]);
-
-  /* só libera o scrub quando a duração for conhecida e finita */
-  const aoCarregarMeta = () => {
     const v = videoRef.current;
-    if (v && isFinite(v.duration) && v.duration > 0) {
-      try { v.currentTime = 0; } catch (e) { /* iOS */ }
-      setDuracaoOk(true);
-    }
-  };
+    if (!v) return;
+    const tentar = () => { const p = v.play(); if (p) p.catch(() => {}); };
+    tentar();
+    document.addEventListener("touchstart", tentar, { once: true, passive: true });
+    document.addEventListener("click", tentar, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", tentar);
+      document.removeEventListener("click", tentar);
+    };
+  }, []);
 
   const opAbertura = opacidadeDaJanela(progresso, 0, 0.05, 0.03);
   const ativo = CLASSES.find((c) => progresso >= c.de - 0.05 && progresso <= c.ate + 0.05);
@@ -355,15 +320,18 @@ export default function App() {
       <section id="topo" ref={trilhaRef} className="relative h-[360vh] md:h-[500vh]">
         <div className="sticky top-0 h-screen w-full overflow-hidden">
 
+          {/* muted e playsInline são obrigatórios: sem eles o autoplay é
+              recusado no iOS e no Chrome mobile. */}
           <video
             ref={videoRef}
-            onLoadedMetadata={aoCarregarMeta}
             className="absolute inset-0 z-0 w-full h-full object-cover"
             src={VIDEO}
+            autoPlay
+            loop
             muted
             playsInline
             preload="auto"
-            crossOrigin="anonymous"
+            aria-hidden="true"
           />
 
           {/* grade de prancheta */}
@@ -415,8 +383,7 @@ export default function App() {
         </div>
         <p className="px-5 sm:px-6 md:px-12 pb-8 text-[11px] leading-relaxed text-white/25 max-w-3xl">
           Fan hub não-oficial, feito por fãs. IMSA, WeatherTech, GTP, LMP2 e GTD pertencem
-          aos respectivos titulares. Vídeo de fundo gerado por IA — os carros são
-          representações das categorias, não reproduções dos modelos reais.
+          aos respectivos titulares. Projeto sem fins lucrativos.
         </p>
       </footer>
     </>

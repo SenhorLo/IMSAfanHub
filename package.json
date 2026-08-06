@@ -1,32 +1,23 @@
 {
-  "name": "imsa",
+  "name": "imsa-fan-hub",
   "version": "1.0.0",
-  "description": "",
-  "main": "cars3d.js",
+  "private": true,
+  "type": "module",
+  "description": "Fan hub nao-oficial do IMSA WeatherTech SportsCar Championship",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SenhorLo/IMSAfanHub.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/SenhorLo/IMSAfanHub/issues"
-  },
-  "homepage": "https://github.com/SenhorLo/IMSAfanHub#readme",
   "dependencies": {
-    "lucide-react": "^1.28.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.0.5",
-    "tailwindcss": "^4.3.3",
+    "@tailwindcss/vite": "^4.2.4",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "^4.2.4",
     "vite": "^8.2.0"
   }
 }
